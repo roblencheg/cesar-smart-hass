@@ -33,6 +33,7 @@ class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._auth_data: dict | None = None
         self._vehicles: list[dict] | None = None
         self._device_id: str | None = None
+        self._user_input: dict | None = None
 
     async def async_step_user(self, user_input=None):
         errors = {}
@@ -52,9 +53,10 @@ class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._auth_data = auth_data
                 self._vehicles = vehicles
                 self._device_id = device_id
+                self._user_input = user_input
                 if len(vehicles) == 1:
-                    return self._create_entry(vehicles[0], user_input)
-                return await self.async_step_select_vehicle(user_input)
+                    return self._create_entry(vehicles[0], self._user_input)
+                return await self.async_step_select_vehicle(None)
 
         return self.async_show_form(
             step_id="user",
@@ -78,7 +80,7 @@ class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }),
             )
         index = int(user_input["vehicle"])
-        return self._create_entry(self._vehicles[index], user_input)
+        return self._create_entry(self._vehicles[index], self._user_input)
 
     def _create_entry(self, vehicle: dict, user_input: dict) -> dict:
         vin = vehicle.get("vin", "")

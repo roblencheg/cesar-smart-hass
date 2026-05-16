@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
 
 from custom_components.cesar_smart.config_flow import CesarSmartConfigFlow
@@ -25,6 +25,25 @@ SECURITY_OBJECTS = [
         "engineType": "benzine",
         "units": [{"unitId": "unit_123", "product": {"code": "C1"}}],
     }
+]
+
+MULTI_VEHICLES = [
+    {
+        "vin": "VIN001",
+        "modelName": "H3",
+        "brandName": "Haval",
+        "clientName": "Car1",
+        "engineType": "benzine",
+        "units": [{"unitId": "unit_001", "product": {"code": "C1"}}],
+    },
+    {
+        "vin": "VIN002",
+        "modelName": "H9",
+        "brandName": "Haval",
+        "clientName": "Car2",
+        "engineType": "benzine",
+        "units": [{"unitId": "unit_002", "product": {"code": "C1"}}],
+    },
 ]
 
 
@@ -57,6 +76,32 @@ async def test_config_flow_success(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
+async def test_config_flow_multi_vehicle(hass: HomeAssistant):
+    flow = CesarSmartConfigFlow()
+    flow.hass = hass
+    with patch(
+        "custom_components.cesar_smart.config_flow.CesarSmartApiClient.async_login",
+        AsyncMock(return_value=OAUTH_RESPONSE),
+    ), patch(
+        "custom_components.cesar_smart.config_flow.CesarSmartApiClient.async_get_security_objects",
+        AsyncMock(return_value=MULTI_VEHICLES),
+    ):
+        result = await flow.async_step_user(
+            user_input={"username": "user@test.com", "password": "pass"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "select_vehicle"
+
+        result = await flow.async_step_select_vehicle({"vehicle": "1"})
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Haval H9"
+        assert result["data"]["vin"] == "VIN002"
+        assert result["data"]["username"] == "user@test.com"
+        assert result["data"]["password"] == "pass"
+        assert result["data"]["unit_id"] == "unit_002"
+
+
+@pytest.mark.asyncio
 async def test_config_flow_auth_failure(hass: HomeAssistant):
     flow = CesarSmartConfigFlow()
     flow.hass = hass
@@ -73,18 +118,14 @@ async def test_config_flow_auth_failure(hass: HomeAssistant):
 
 @pytest.mark.asyncio
 async def test_options_flow(hass: HomeAssistant):
-    entry = config_entries.ConfigEntry(
-        version=1,
+    from tests.common import MockConfigEntry
+
+    entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Test",
         data={"username": "test", "password": "test"},
-        source="user",
         options={},
-        entry_id="test_entry",
-        discovery_keys={},
-        minor_version=1,
-        unique_id="test_entry",
     )
+    entry.add_to_hass(hass)
     flow = CesarSmartConfigFlow()
     flow.hass = hass
     options_flow = CesarSmartConfigFlow.async_get_options_flow(entry)
