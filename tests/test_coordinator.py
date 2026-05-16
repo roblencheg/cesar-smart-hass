@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from custom_components.cesar_smart.coordinator import CesarSmartCoordinator
 from custom_components.cesar_smart.const import DOMAIN
+from custom_components.cesar_smart.coordinator import CesarSmartCoordinator
 
 
 @pytest.fixture
