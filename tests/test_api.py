@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
 
 from custom_components.cesar_smart.api import CesarSmartApiClient, CesarSmartAuthError
-from custom_components.cesar_smart.const import CLIENT_ID
+from custom_components.cesar_smart.const import CLIENT_ID, OAUTH_API_URL
 
 OAUTH_RESPONSE = {
     "access_token": "test_access_token",
@@ -131,3 +132,33 @@ async def test_401_raises_auth_error(client):
     ):
         with pytest.raises(CesarSmartAuthError):
             await client.async_get_unit_statuses("bad_token", "unit_123")
+
+
+@pytest.mark.asyncio
+async def test_async_token_request_headers():
+    mock_resp = AsyncMock(spec=aiohttp.ClientResponse)
+    mock_resp.status = 200
+    mock_resp.json = AsyncMock(return_value=OAUTH_RESPONSE)
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__.return_value = mock_resp
+    mock_cm.__aexit__.return_value = None
+
+    mock_session = AsyncMock(spec=aiohttp.ClientSession)
+    mock_session.post.return_value = mock_cm
+
+    client = CesarSmartApiClient(None, "test_device_id", session=mock_session)
+    result = await client.async_login("user", "pass")
+
+    assert result["access_token"] == "test_access_token"
+
+    mock_session.post.assert_awaited_once()
+    call_args = mock_session.post.call_args
+    url = call_args[0][0]
+    headers = call_args[1]["headers"]
+
+    assert url == OAUTH_API_URL.rstrip("/") + "/oauth/token"
+    assert headers["Authorization"].startswith("Basic ")
+    assert headers["Accept"] == "application/json;charset=UTF-8"
+    assert headers["User-Agent"] == "CesarSmart/3.9 HomeAssistant"
+    assert headers["Content-Type"] == "application/x-www-form-urlencoded"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -53,16 +54,25 @@ class CesarSmartApiClient:
         })
 
     async def _async_token_request(self, data: dict) -> dict:
-        auth = aiohttp.BasicAuth(CLIENT_ID, CLIENT_SECRET)
+        basic = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode("utf-8")).decode("ascii")
+        headers = {
+            "Authorization": f"Basic {basic}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json;charset=UTF-8",
+            "User-Agent": "CesarSmart/3.9 HomeAssistant",
+        }
         async with self._s.post(
-            OAUTH_API_URL + "oauth/token",
+            OAUTH_API_URL.rstrip("/") + "/oauth/token",
             data=data,
-            auth=auth,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            headers=headers,
         ) as resp:
+            if resp.status == 401:
+                _LOGGER.error("OAuth 401 Unauthorized. Check OAuth client headers and user credentials.")
+                _LOGGER.debug("OAuth 401 body: %s", await resp.text())
+                raise CesarSmartAuthError("OAuth failed: 401 Unauthorized")
             if resp.status != 200:
-                text = await resp.text()
-                _LOGGER.error("OAuth error %s: %s", resp.status, text)
+                _LOGGER.error("OAuth error %s", resp.status)
+                _LOGGER.debug("OAuth error body: %s", await resp.text())
                 raise CesarSmartAuthError(f"OAuth failed: {resp.status}")
             result = await resp.json()
             result["expires_at"] = (
