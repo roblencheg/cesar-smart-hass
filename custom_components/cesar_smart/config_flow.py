@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 
 import voluptuous as vol
@@ -70,7 +72,8 @@ class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_vehicle(self, user_input=None):
         if user_input is None:
             options = {
-                str(i): f"{v.get('brandName', '')} {v.get('modelName', '')} - {v.get('clientName', '')}"
+                label = f"{v.get('brandName', '')} {v.get('modelName', '')} - {v.get('clientName', '')}"
+                str(i): label
                 for i, v in enumerate(self._vehicles)
             }
             return self.async_show_form(
