@@ -12,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STOMP_CONNECT = "CONNECT\naccept-version:1.1,1.2\nheart-beat:10000,10000\n\n\x00"
 STOMP_SUBSCRIBE_EVENT = "SUBSCRIBE\nid:sub-event\ndestination:/user/queue/event\nack:auto\n\n\x00"
-STOMP_SUBSCRIBE_LOCATION = "SUBSCRIBE\nid:sub-location\ndestination:/user/queue/location\nack:auto\n\n\x00"
+STOMP_SUBSCRIBE_LOCATION = (
+    "SUBSCRIBE\nid:sub-location\ndestination:/user/queue/location\nack:auto\n\n\x00"
+)
 
 LOCATION_UPPER_MAP = {
     "LATITUDE": "latitude",

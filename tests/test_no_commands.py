@@ -61,6 +61,7 @@ def test_no_post_method_to_commands():
 
 def test_no_switch_button_lock_platforms():
     from custom_components.cesar_smart.const import PLATFORMS
+
     from homeassistant.const import Platform
     assert Platform.SWITCH not in PLATFORMS
     assert Platform.BUTTON not in PLATFORMS

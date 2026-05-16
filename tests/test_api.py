@@ -86,7 +86,9 @@ async def test_login_success(client):
 
 @pytest.mark.asyncio
 async def test_login_failure(client):
-    with patch.object(client, "_async_token_request", AsyncMock(side_effect=CesarSmartAuthError("fail"))):
+    with patch.object(
+        client, "_async_token_request", AsyncMock(side_effect=CesarSmartAuthError("fail"))
+    ):
         with pytest.raises(CesarSmartAuthError):
             await client.async_login("user", "pass")
 
@@ -124,6 +126,8 @@ async def test_get_location(client):
 
 @pytest.mark.asyncio
 async def test_401_raises_auth_error(client):
-    with patch.object(client, "_request", AsyncMock(side_effect=CesarSmartAuthError("Token expired"))):
+    with patch.object(
+        client, "_request", AsyncMock(side_effect=CesarSmartAuthError("Token expired"))
+    ):
         with pytest.raises(CesarSmartAuthError):
             await client.async_get_unit_statuses("bad_token", "unit_123")

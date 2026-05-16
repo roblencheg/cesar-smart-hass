@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import logging
-from datetime import timedelta, datetime, timezone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,8 +40,12 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         self._expires_at: str | None = entry.data.get("expires_at")
         self._ws_task = None
 
-        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
-        location_interval = entry.options.get(CONF_LOCATION_INTERVAL, entry.data.get(CONF_LOCATION_INTERVAL, DEFAULT_LOCATION_INTERVAL))
+        scan_interval = entry.options.get(
+            CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
+        location_interval = entry.options.get(
+            CONF_LOCATION_INTERVAL, entry.data.get(CONF_LOCATION_INTERVAL, DEFAULT_LOCATION_INTERVAL)
+        )
 
         self._location_interval = timedelta(seconds=location_interval)
         self._location_last_update: datetime | None = None

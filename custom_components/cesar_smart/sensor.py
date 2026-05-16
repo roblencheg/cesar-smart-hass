@@ -5,11 +5,11 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    UnitOfVolume,
-    UnitOfLength,
     UnitOfElectricPotential,
-    UnitOfTemperature,
+    UnitOfLength,
     UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory

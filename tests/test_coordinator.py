@@ -45,9 +45,11 @@ async def test_coordinator_initialization(mock_hass, mock_entry):
 async def test_coordinator_update(mock_hass, mock_entry):
     coordinator = CesarSmartCoordinator(mock_hass, mock_entry)
     with patch.object(
-        coordinator.api, "async_get_unit_statuses", AsyncMock(return_value={"ENGINE_STATE": "STOPPED"})
+        coordinator.api, "async_get_unit_statuses",
+        AsyncMock(return_value={"ENGINE_STATE": "STOPPED"}),
     ), patch.object(
-        coordinator.api, "async_get_location", AsyncMock(return_value={"latitude": 55.0, "longitude": 37.0})
+        coordinator.api, "async_get_location",
+        AsyncMock(return_value={"latitude": 55.0, "longitude": 37.0}),
     ), patch.object(
         coordinator, "async_refresh_token_if_needed", AsyncMock()
     ):
