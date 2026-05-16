@@ -91,6 +91,13 @@ async def test_config_flow_multi_vehicle(hass: HomeAssistant):
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "select_vehicle"
+        schema_keys = list(result["data_schema"].schema.keys())
+        assert "vehicle" in schema_keys
+        options = result["data_schema"].schema["vehicle"].container
+        assert "0" in options
+        assert "1" in options
+        assert options["0"] == "Haval H3 - Car1"
+        assert options["1"] == "Haval H9 - Car2"
 
         result = await flow.async_step_select_vehicle({"vehicle": "1"})
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -118,7 +125,7 @@ async def test_config_flow_auth_failure(hass: HomeAssistant):
 
 @pytest.mark.asyncio
 async def test_options_flow(hass: HomeAssistant):
-    from tests.common import MockConfigEntry
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -70,7 +70,7 @@ class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_vehicle(self, user_input=None):
         if user_input is None:
             options = {
-                f"{v.get('brandName', '')} {v.get('modelName', '')} - {v.get('clientName', '')}": i
+                str(i): f"{v.get('brandName', '')} {v.get('modelName', '')} - {v.get('clientName', '')}"
                 for i, v in enumerate(self._vehicles)
             }
             return self.async_show_form(
