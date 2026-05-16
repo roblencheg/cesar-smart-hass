@@ -44,7 +44,8 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
             CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
         location_interval = entry.options.get(
-            CONF_LOCATION_INTERVAL, entry.data.get(CONF_LOCATION_INTERVAL, DEFAULT_LOCATION_INTERVAL)
+            CONF_LOCATION_INTERVAL,
+            entry.data.get(CONF_LOCATION_INTERVAL, DEFAULT_LOCATION_INTERVAL),
         )
 
         self._location_interval = timedelta(seconds=location_interval)
