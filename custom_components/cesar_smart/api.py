@@ -67,7 +67,9 @@ class CesarSmartApiClient:
             headers=headers,
         ) as resp:
             if resp.status == 401:
-                _LOGGER.error("OAuth 401 Unauthorized. Check OAuth client headers and user credentials.")
+                _LOGGER.error(
+                    "OAuth 401 Unauthorized. Check OAuth client headers and user credentials."
+                )
                 _LOGGER.debug("OAuth 401 body: %s", await resp.text())
                 raise CesarSmartAuthError("OAuth failed: 401 Unauthorized")
             if resp.status != 200:
