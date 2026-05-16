@@ -3,7 +3,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from aiohttp import web
 
 from custom_components.cesar_smart.api import CesarSmartApiClient, CesarSmartAuthError
 from custom_components.cesar_smart.const import CLIENT_ID

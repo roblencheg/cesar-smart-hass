@@ -20,6 +20,13 @@ def test_no_send_command_in_api():
     assert not hasattr(CesarSmartApiClient, "async_send_command")
 
 
+FORBIDDEN_PATTERNS = [
+    "POST /api/v2/security_objects/units/commands",
+    "async_send_command",
+    "send_command",
+]
+
+
 def test_no_post_commands_in_api():
     with open(
         os.path.join(
@@ -32,7 +39,24 @@ def test_no_post_commands_in_api():
         encoding="utf-8",
     ) as f:
         content = f.read()
-    assert "commands" not in content, "api.py must not reference 'commands'"
+    for pattern in FORBIDDEN_PATTERNS:
+        assert pattern not in content, f"api.py must not contain '{pattern}'"
+
+
+def test_no_post_method_to_commands():
+    """Ensure _request is never called with POST + commands-related path."""
+    with open(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "custom_components",
+            "cesar_smart",
+            "api.py",
+        ),
+        encoding="utf-8",
+    ) as f:
+        content = f.read()
+    assert '("POST"' not in content, "api.py must not use POST requests"
 
 
 def test_no_switch_button_lock_platforms():

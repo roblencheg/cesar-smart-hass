@@ -1,6 +1,7 @@
 # No external runtime dependencies required.
 # All HTTP/WS handled via aiohttp from Home Assistant core.
 # Test dependencies:
+homeassistant>=2024.1.0
 pytest
 pytest-aiohttp
 pytest-homeassistant-custom-component
