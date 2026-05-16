@@ -81,6 +81,9 @@ async def test_options_flow(hass: HomeAssistant):
         source="user",
         options={},
         entry_id="test_entry",
+        discovery_keys={},
+        minor_version=1,
+        unique_id="test_entry",
     )
     flow = CesarSmartConfigFlow()
     flow.hass = hass
