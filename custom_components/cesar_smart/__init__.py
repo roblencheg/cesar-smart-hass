@@ -4,6 +4,11 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CesarSmartCoordinator
 
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Cesar Smart integration from YAML (not supported)."""
+    return True
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = CesarSmartCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
