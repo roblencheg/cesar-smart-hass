@@ -1,6 +1,6 @@
 [project]
 name = "cesar-smart-hass"
-version = "0.1.7"
+version = "0.1.8"
 description = "Cesar Smart ReadOnly - HACS-compatible Home Assistant custom integration"
 authors = [{ name = "roblencheg" }]
 

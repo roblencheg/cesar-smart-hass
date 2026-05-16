@@ -23,7 +23,7 @@ WS_URL = "wss://tw-web-socket-gate.csat.ru/tw-web-socket-gate/push"
 # Public OAuth mobile client credentials from official Cesar Smart APK BuildConfig.
 # These are NOT user secrets — public client identifiers embedded in the app.
 CLIENT_ID = "ma_cesar_key"
-CLIENT_SECRET = "Kkl3Vh76Bn4sT98p"
+CLIENT_SECRET = "Aa123456"
 
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
