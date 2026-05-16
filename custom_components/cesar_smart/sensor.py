@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STATUS_SENSORS, MANUFACTURER
+from .const import DOMAIN, STATUS_SENSORS, MANUFACTURER, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +55,11 @@ class CesarBaseEntity(CoordinatorEntity):
         self._entry = entry
         self._attr_name = name
         self._attr_unique_id = f"{entry.entry_id}_{key}"
+        dev_id = device_id_from_vin_unit(
+            entry.data.get("vin", ""), entry.data.get("unit_id", "")
+        )
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
+            "identifiers": {(DOMAIN, dev_id)},
             "name": entry.data.get("vehicle_name", "Cesar Smart Vehicle"),
             "manufacturer": MANUFACTURER,
             "model": "",

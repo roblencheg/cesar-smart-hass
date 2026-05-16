@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
 
 
@@ -29,8 +29,11 @@ class CesarDeviceTracker(CoordinatorEntity, TrackerEntity):
         self._entry = entry
         self._attr_name = entry.data.get("vehicle_name", "Cesar Smart Vehicle")
         self._attr_unique_id = f"{entry.entry_id}_tracker"
+        dev_id = device_id_from_vin_unit(
+            entry.data.get("vin", ""), entry.data.get("unit_id", "")
+        )
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
+            "identifiers": {(DOMAIN, dev_id)},
             "name": self._attr_name,
             "manufacturer": MANUFACTURER,
             "model": "",

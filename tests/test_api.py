@@ -6,6 +6,7 @@ import pytest
 from aiohttp import web
 
 from custom_components.cesar_smart.api import CesarSmartApiClient, CesarSmartAuthError
+from custom_components.cesar_smart.const import CLIENT_ID
 
 OAUTH_RESPONSE = {
     "access_token": "test_access_token",
@@ -65,6 +66,10 @@ SECURITY_OBJECTS_RESPONSE = {
     ],
     "error": None,
 }
+
+
+def test_client_id():
+    assert CLIENT_ID == "ma_cesar_key"
 
 
 @pytest.fixture

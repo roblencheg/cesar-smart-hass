@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
-from typing import Any
 
 import aiohttp
 
@@ -13,6 +13,27 @@ _LOGGER = logging.getLogger(__name__)
 STOMP_CONNECT = "CONNECT\naccept-version:1.1,1.2\nheart-beat:10000,10000\n\n\x00"
 STOMP_SUBSCRIBE_EVENT = "SUBSCRIBE\nid:sub-event\ndestination:/user/queue/event\nack:auto\n\n\x00"
 STOMP_SUBSCRIBE_LOCATION = "SUBSCRIBE\nid:sub-location\ndestination:/user/queue/location\nack:auto\n\n\x00"
+
+LOCATION_UPPER_MAP = {
+    "LATITUDE": "latitude",
+    "LONGITUDE": "longitude",
+    "COURSE": "course",
+    "SPEED": "speedKm",
+    "DATE_MILLI": "date",
+    "DATE": "date",
+    "UNIT_ID": "unitId",
+    "SPEEDKM": "speedKm",
+}
+
+EVENT_PUSH_TYPES = {
+    "STATUS_CHANGED",
+    "LOCATION_CHANGED",
+    "COMMAND_STATUS_CHANGED",
+    "COMMAND_LOG_CHANGED",
+    "SIM_STATUS_CHANGED",
+    "SECURITY_OBJECT_BALANCE_CHANGED",
+    "AUTOSTART_SCHEDULE_CHANGED",
+}
 
 
 class CesarSmartWebSocket:
@@ -25,7 +46,6 @@ class CesarSmartWebSocket:
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._task: asyncio.Task | None = None
         self._should_stop = False
-        self._heartbeat_task: asyncio.Task | None = None
 
     async def start(self):
         self._should_stop = False
@@ -40,13 +60,6 @@ class CesarSmartWebSocket:
             except asyncio.CancelledError:
                 pass
             self._task = None
-        if self._heartbeat_task:
-            self._heartbeat_task.cancel()
-            try:
-                await self._heartbeat_task
-            except asyncio.CancelledError:
-                pass
-            self._heartbeat_task = None
         if self._ws:
             await self._ws.close()
             self._ws = None
@@ -129,7 +142,6 @@ class CesarSmartWebSocket:
             return
 
         try:
-            import json
             payload = json.loads(body)
         except json.JSONDecodeError:
             _LOGGER.warning("WS invalid JSON: %s", body[:200])
@@ -141,23 +153,53 @@ class CesarSmartWebSocket:
             await self._handle_location(payload)
 
     async def _handle_event(self, payload: dict):
-        event_type = payload.get("type") or payload.get("eventType")
-        _LOGGER.debug("WS event: %s", event_type)
-        if event_type == "STATUS_CHANGED":
+        push_type = payload.get("PUSH_TYPE")
+        if not push_type:
+            return
+        _LOGGER.debug("WS event PUSH_TYPE=%s", push_type)
+
+        if push_type == "STATUS_CHANGED":
             await self._coordinator.async_update_ws_statuses()
-        elif event_type == "LOCATION_CHANGED":
-            loc_data = payload.get("data") or payload.get("location")
+
+        elif push_type == "LOCATION_CHANGED":
+            loc_data = _normalize_ws_location(payload)
             if loc_data:
                 await self._coordinator.async_update_ws_location(loc_data)
-        elif event_type == "SIM_STATUS_CHANGED":
+
+        elif push_type == "SIM_STATUS_CHANGED":
             await self._coordinator.async_update_ws_statuses()
-        elif event_type == "SECURITY_OBJECT_BALANCE_CHANGED":
+
+        elif push_type == "SECURITY_OBJECT_BALANCE_CHANGED":
             await self._coordinator.async_update_ws_statuses()
+
+        elif push_type == "COMMAND_STATUS_CHANGED":
+            _LOGGER.debug("Command status change ignored (read-only)")
+
+        elif push_type == "COMMAND_LOG_CHANGED":
+            _LOGGER.debug("Command log change ignored (read-only)")
+
+        elif push_type == "AUTOSTART_SCHEDULE_CHANGED":
+            _LOGGER.debug("Autostart schedule change ignored (read-only)")
 
     async def _handle_location(self, payload: dict):
         loc_data = payload.get("data") or payload.get("location") or payload
-        if isinstance(loc_data, dict) and "latitude" in loc_data:
-            await self._coordinator.async_update_ws_location(loc_data)
+        if isinstance(loc_data, dict):
+            loc_data = _normalize_ws_location(loc_data)
+            if loc_data and "latitude" in loc_data:
+                await self._coordinator.async_update_ws_location(loc_data)
 
     def update_token(self, access_token: str):
         self._access_token = access_token
+
+
+def _normalize_ws_location(data: dict) -> dict:
+    result = {}
+    for key, val in data.items():
+        upper = key.upper()
+        if upper in LOCATION_UPPER_MAP:
+            result[LOCATION_UPPER_MAP[upper]] = val
+        elif key.isupper() or key[0].isupper():
+            result[key.lower()] = val
+        else:
+            result[key] = val
+    return result

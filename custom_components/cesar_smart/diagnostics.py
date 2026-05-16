@@ -8,30 +8,46 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
 
-REDACT_KEYS = {
+_REDACT_EXACT_LOWER = {
     "username",
     "password",
     "access_token",
     "refresh_token",
     "client_secret",
     "vin",
-    "unitId",
+    "unitid",
     "unit_id",
     "device_id",
-    "BLE_LOCAL_ADDRESS",
-    "BLE_NUMBER",
-    "REM_START_PHONE_",
-    "SIM1",
-    "SIM2",
-    "latitude",
-    "longitude",
-    "course",
+    "address",
 }
+
+_REDACT_PREFIX = {
+    "ble_local_address",
+    "ble_number",
+    "rem_start_phone",
+    "sim",
+    "phone",
+}
+
+_REDACT_SUFFIX = {"latitude", "longitude", "course"}
+
+
+def _should_redact(key: str) -> bool:
+    kl = key.lower()
+    if kl in _REDACT_EXACT_LOWER:
+        return True
+    for prefix in _REDACT_PREFIX:
+        if kl.startswith(prefix):
+            return True
+    for suffix in _REDACT_SUFFIX:
+        if kl.endswith(suffix):
+            return True
+    return False
 
 
 def _redact(data: Any) -> Any:
     if isinstance(data, dict):
-        return {k: _redact(v) if k not in REDACT_KEYS else "**REDACTED**" for k, v in data.items()}
+        return {k: _redact(v) if not _should_redact(k) else "**REDACTED**" for k, v in data.items()}
     if isinstance(data, list):
         return [_redact(item) for item in data]
     return data

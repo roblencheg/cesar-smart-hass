@@ -1,7 +1,14 @@
+import hashlib
+
 from homeassistant.const import Platform
 
 DOMAIN = "cesar_smart"
 MANUFACTURER = "Cesar"
+
+
+def device_id_from_vin_unit(vin: str, unit_id: str) -> str:
+    raw = f"cesar_smart:{vin}:{unit_id}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -13,10 +20,10 @@ BASE_API_URL = "https://tw-cesar-key.csat.ru/"
 OAUTH_API_URL = "https://tw-sso-authorization-server.csat.ru/tw-sso-authorization-server/"
 WS_URL = "wss://tw-web-socket-gate.csat.ru/tw-web-socket-gate/push"
 
-# Public OAuth mobile client credentials from the official Cesar Smart APK
-# These are NOT user secrets — they are public client identifiers embedded in the app.
-CLIENT_ID = "cesar-tw-client"
-CLIENT_SECRET = "K4rA6sT9pL2mN8xQ"
+# Public OAuth mobile client credentials from official Cesar Smart APK BuildConfig.
+# These are NOT user secrets — public client identifiers embedded in the app.
+CLIENT_ID = "ma_cesar_key"
+CLIENT_SECRET = "Kkl3Vh76Bn4sT98p"
 
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
