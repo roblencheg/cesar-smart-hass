@@ -152,7 +152,7 @@ async def test_async_token_request_headers():
 
     assert result["access_token"] == "test_access_token"
 
-    mock_session.post.assert_awaited_once()
+    mock_session.post.assert_called_once()
     call_args = mock_session.post.call_args
     url = call_args[0][0]
     headers = call_args[1]["headers"]
