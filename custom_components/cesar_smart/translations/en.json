@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cesar Smart Login",
+        "description": "Enter your Cesar Smart account credentials",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "select_vehicle": {
+        "title": "Select Vehicle",
+        "description": "Multiple vehicles found. Select one to monitor.",
+        "data": {
+          "vehicle": "Vehicle"
+        }
+      }
+    },
+    "error": {
+      "auth": "Invalid credentials or authentication failed"
+    },
+    "abort": {
+      "already_configured": "This vehicle is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Cesar Smart Options",
+        "description": "Configure integration options",
+        "data": {
+          "enable_websocket": "Enable WebSocket realtime updates",
+          "scan_interval": "Status polling interval (seconds)",
+          "location_interval": "Location polling interval (seconds)"
+        }
+      }
+    }
+  }
+}

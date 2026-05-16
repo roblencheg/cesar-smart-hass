@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Вход Cesar Smart",
+        "description": "Введите учётные данные аккаунта Cesar Smart",
+        "data": {
+          "username": "Имя пользователя",
+          "password": "Пароль"
+        }
+      },
+      "select_vehicle": {
+        "title": "Выберите автомобиль",
+        "description": "Найдено несколько автомобилей. Выберите один для отслеживания.",
+        "data": {
+          "vehicle": "Автомобиль"
+        }
+      }
+    },
+    "error": {
+      "auth": "Неверные учётные данные или ошибка аутентификации"
+    },
+    "abort": {
+      "already_configured": "Этот автомобиль уже настроен"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Настройки Cesar Smart",
+        "description": "Настройте параметры интеграции",
+        "data": {
+          "enable_websocket": "WebSocket обновления в реальном времени",
+          "scan_interval": "Интервал опроса статусов (секунд)",
+          "location_interval": "Интервал опроса местоположения (секунд)"
+        }
+      }
+    }
+  }
+}

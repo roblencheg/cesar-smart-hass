@@ -1,0 +1,50 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-aiohttp
+
+      - name: Lint with ruff
+        run: ruff check custom_components/cesar_smart/ tests/
+
+      - name: Check manifest.json
+        run: |
+          python -c "
+import json
+with open('custom_components/cesar_smart/manifest.json') as f:
+    data = json.load(f)
+assert data['domain'] == 'cesar_smart'
+assert data['config_flow'] == True
+print('manifest.json OK')
+"
+
+      - name: Check hacs.json
+        run: |
+          python -c "
+import json
+with open('hacs.json') as f:
+    data = json.load(f)
+assert 'name' in data
+print('hacs.json OK')
+"
+
+      - name: Run tests
+        run: pytest tests/ -v
