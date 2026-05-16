@@ -20,7 +20,9 @@ from .const import (
     CONF_LOCATION_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_LOCATION_INTERVAL,
+    DEFAULT_ENABLE_WEBSOCKET,
 )
+from .websocket import CesarSmartWebSocket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +47,11 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         self._location_last_update: datetime | None = None
         self._location_data: dict | None = None
         self._balance_data: dict | None = None
+
+        self._enable_ws = entry.options.get(
+            CONF_ENABLE_WEBSOCKET, entry.data.get(CONF_ENABLE_WEBSOCKET, DEFAULT_ENABLE_WEBSOCKET)
+        )
+        self._ws: CesarSmartWebSocket | None = None
 
         self.api = CesarSmartApiClient(hass, self._device_id)
 
@@ -135,6 +142,22 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         self._location_last_update = datetime.now(timezone.utc)
         self.async_set_updated_data({**self.data, "location": location_data})
 
+    async def async_start_websocket(self):
+        if not self._enable_ws:
+            return
+        if not self._access_token:
+            await self.async_refresh_token_if_needed()
+        self._ws = CesarSmartWebSocket(
+            self.hass, self._access_token, self._device_id, self
+        )
+        await self._ws.start()
+
+    async def async_stop_websocket(self):
+        if self._ws:
+            await self._ws.stop()
+            self._ws = None
+
     async def async_shutdown(self):
+        await self.async_stop_websocket()
         if hasattr(self, "api") and self.api:
             await self.api.close()
