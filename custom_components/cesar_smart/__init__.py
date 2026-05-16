@@ -5,7 +5,6 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CesarSmartCoordinator
 
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 

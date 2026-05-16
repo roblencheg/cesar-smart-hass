@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Lint with ruff
-        run: ruff check --diff custom_components/cesar_smart/ tests/
+        run: ruff check custom_components/cesar_smart/ tests/
 
       - name: Check manifest.json
         run: python -c "import json; d=json.load(open('custom_components/cesar_smart/manifest.json')); assert d['domain']=='cesar_smart'; assert d['config_flow']==True; print('manifest OK')"
