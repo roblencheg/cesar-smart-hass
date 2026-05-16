@@ -10,4 +10,5 @@ def hass():
     """Mock HomeAssistant."""
     hass = Mock()
     hass.data = {}
+    hass.config_entries._entries = {}
     return hass
