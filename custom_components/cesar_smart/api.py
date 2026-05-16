@@ -7,9 +7,9 @@ import aiohttp
 
 from .const import (
     BASE_API_URL,
-    OAUTH_API_URL,
     CLIENT_ID,
     CLIENT_SECRET,
+    OAUTH_API_URL,
     TOKEN_EXPIRY_BUFFER,
 )
 

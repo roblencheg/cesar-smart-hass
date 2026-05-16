@@ -3,28 +3,27 @@ from __future__ import annotations
 import uuid
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import (
-    DOMAIN,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_DEVICE_ID,
-    CONF_VIN,
-    CONF_UNIT_ID,
-    CONF_VEHICLE_NAME,
-    CONF_ENABLE_WEBSOCKET,
-    CONF_SCAN_INTERVAL,
-    CONF_LOCATION_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_LOCATION_INTERVAL,
-    MIN_SCAN_INTERVAL,
-    MIN_LOCATION_INTERVAL,
-    DEFAULT_ENABLE_WEBSOCKET,
-)
 from .api import CesarSmartApiClient
+from .const import (
+    CONF_DEVICE_ID,
+    CONF_ENABLE_WEBSOCKET,
+    CONF_LOCATION_INTERVAL,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_UNIT_ID,
+    CONF_USERNAME,
+    CONF_VEHICLE_NAME,
+    CONF_VIN,
+    DEFAULT_ENABLE_WEBSOCKET,
+    DEFAULT_LOCATION_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MIN_LOCATION_INTERVAL,
+    MIN_SCAN_INTERVAL,
+)
 
 
 class CesarSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -7,10 +7,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
     BINARY_SENSOR_MAP,
-    STOPPED_STATES,
+    DOMAIN,
     MANUFACTURER,
+    STOPPED_STATES,
     device_id_from_vin_unit,
 )
 from .coordinator import CesarSmartCoordinator

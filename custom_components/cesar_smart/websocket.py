@@ -6,7 +6,7 @@ import logging
 
 import aiohttp
 
-from .const import WS_URL, WS_RECONNECT_DELAYS
+from .const import WS_RECONNECT_DELAYS, WS_URL
 
 _LOGGER = logging.getLogger(__name__)
 

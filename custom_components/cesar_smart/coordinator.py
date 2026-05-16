@@ -9,18 +9,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import CesarSmartApiClient, CesarSmartAuthError
 from .const import (
-    DOMAIN,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_DEVICE_ID,
-    CONF_VIN,
-    CONF_UNIT_ID,
     CONF_ENABLE_WEBSOCKET,
-    CONF_SCAN_INTERVAL,
     CONF_LOCATION_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_LOCATION_INTERVAL,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_UNIT_ID,
+    CONF_USERNAME,
+    CONF_VIN,
     DEFAULT_ENABLE_WEBSOCKET,
+    DEFAULT_LOCATION_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 from .websocket import CesarSmartWebSocket
 

@@ -3,12 +3,11 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
 
-from custom_components.cesar_smart.const import DOMAIN
 from custom_components.cesar_smart.config_flow import CesarSmartConfigFlow
+from custom_components.cesar_smart.const import DOMAIN
 
 OAUTH_RESPONSE = {
     "access_token": "test_token",
