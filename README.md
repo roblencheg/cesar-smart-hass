@@ -3,6 +3,9 @@
 [![GitHub Release](https://img.shields.io/github/v/release/roblencheg/cesar-smart-hass)](https://github.com/roblencheg/cesar-smart-hass/releases)
 [![HACS Validation](https://github.com/roblencheg/cesar-smart-hass/actions/workflows/validate.yml/badge.svg)](https://github.com/roblencheg/cesar-smart-hass/actions/workflows/validate.yml)
 
+[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=roblencheg&repository=cesar-smart-hass&category=integration)
+[![Open your Home Assistant instance and start configuring the Cesar Smart ReadOnly integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=cesar_smart)
+
 **Read-only** Home Assistant integration for Cesar Smart vehicle security system (Haval, Great Wall, etc.).
 
 > ⚠️ **Read-Only Notice**: This integration is strictly read-only. It **cannot** send any commands to your vehicle (lock/unlock, remote start, horn, etc.). It only reads vehicle status, location, and receives real-time events.
