@@ -84,6 +84,10 @@ pytest tests/
 ruff check custom_components/cesar_smart/
 ```
 
+## Credits
+
+Icon based on OpenMoji "green salad" (U+1F957), licensed under CC BY-SA 4.0.
+
 ## License
 
 MIT License
