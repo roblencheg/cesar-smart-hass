@@ -111,6 +111,7 @@ _BALANCE_DATE_KEYS = {
 _BALANCE_NESTED_PARENT_KEYS = {
     "data", "result", "payload", "balanceInfo",
     "account", "sim", "unitBalance", "securityObjectBalance",
+    "balance1", "balance2", "balances",
 }
 
 
@@ -180,13 +181,28 @@ def _extract_currency_from_string(balance: Any) -> str | None:
     return None
 
 
-def extract_balance_value(balance: dict | None) -> float | str | None:
+def extract_balance_value(balance: Any) -> float | str | None:
     if balance is None:
+        return None
+    if isinstance(balance, list):
+        for item in balance:
+            value = extract_balance_value(item)
+            if value is not None:
+                return value
         return None
     if isinstance(balance, (int, float)):
         return float(balance)
     if isinstance(balance, str):
         return _normalize_number_string(balance)
+    if not isinstance(balance, dict):
+        return None
+
+    for key in ("balance1", "balance2"):
+        nested = balance.get(key)
+        if isinstance(nested, dict):
+            value = extract_balance_value(nested)
+            if value is not None:
+                return value
 
     for parent_key in _BALANCE_NESTED_PARENT_KEYS:
         parent = balance.get(parent_key)
@@ -211,7 +227,19 @@ def extract_balance_value(balance: dict | None) -> float | str | None:
     return None
 
 
-def extract_balance_currency(balance: dict | None) -> str | None:
+def extract_balance_currency(balance: Any) -> str | None:
+    if balance is None:
+        return None
+    if isinstance(balance, list):
+        for item in balance:
+            currency = extract_balance_currency(item)
+            if currency:
+                return currency
+        if balance:
+            value = extract_balance_value(balance)
+            if value is not None:
+                return "RUB"
+        return None
     if not isinstance(balance, dict):
         return None
     for parent_key in _BALANCE_NESTED_PARENT_KEYS:
@@ -228,10 +256,23 @@ def extract_balance_currency(balance: dict | None) -> str | None:
     found = _recursive_find_key(balance, _BALANCE_CURRENCY_KEYS, 0)
     if found is not None:
         return str(found)
-    return _extract_currency_from_string(balance)
+    result = _extract_currency_from_string(balance)
+    if result:
+        return result
+    if _recursive_find_key(balance, {"balance1", "balance2"}, 0) is not None:
+        return "RUB"
+    return None
 
 
-def extract_balance_updated_at(balance: dict | None) -> str | None:
+def extract_balance_updated_at(balance: Any) -> str | None:
+    if balance is None:
+        return None
+    if isinstance(balance, list):
+        for item in balance:
+            updated = extract_balance_updated_at(item)
+            if updated:
+                return updated
+        return None
     if not isinstance(balance, dict):
         return None
     for parent_key in _BALANCE_NESTED_PARENT_KEYS:
@@ -249,6 +290,56 @@ def extract_balance_updated_at(balance: dict | None) -> str | None:
     if found is not None:
         return str(found)
     return None
+
+
+_SENSITIVE_ID_KEYS = {"phone", "unitId", "vin", "device_id"}
+_SENSITIVE_SECRET_KEYS = {"access_token", "refresh_token", "password", "authorization"}
+
+
+def extract_balance_phone(balance: Any) -> str | None:
+    found = _recursive_find_key(balance, {"phone"}, 0)
+    return str(found) if found is not None else None
+
+
+def extract_balance_unit_id(balance: Any) -> str | None:
+    found = _recursive_find_key(balance, {"unitId"}, 0)
+    return str(found) if found is not None else None
+
+
+def extract_balance_unit_class(balance: Any) -> str | None:
+    found = _recursive_find_key(balance, {"unitClass"}, 0)
+    return str(found) if found is not None else None
+
+
+def extract_balance_communication_service(balance: Any) -> bool | None:
+    found = _recursive_find_key(balance, {"communicationService"}, 0)
+    if isinstance(found, bool):
+        return found
+    return None
+
+
+def redact_phone(phone: str | None) -> str | None:
+    return "<REDACTED_PHONE>" if phone else None
+
+
+def redact_unit_id(unit_id: str | None) -> str | None:
+    return "<REDACTED_UNIT_ID>" if unit_id else None
+
+
+def redact_sensitive_balance(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            k: "<REDACTED_PHONE>" if k == "phone"
+            else "<REDACTED_UNIT_ID>" if k == "unitId"
+            else "<REDACTED_VIN>" if k == "vin"
+            else "<REDACTED_DEVICE_ID>" if k == "device_id"
+            else "<REDACTED>" if k in _SENSITIVE_SECRET_KEYS
+            else redact_sensitive_balance(v)
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [redact_sensitive_balance(item) for item in value]
+    return value
 
 
 def merge_status_sources(

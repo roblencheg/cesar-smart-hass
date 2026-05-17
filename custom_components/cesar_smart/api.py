@@ -162,7 +162,7 @@ class CesarSmartApiClient:
         )
         return data.get("data")
 
-    async def async_get_balance(self, access_token: str, vin: str, unit_id: str) -> dict | None:
+    async def async_get_balance(self, access_token: str, vin: str, unit_id: str) -> Any:
         response = await self._request(
             "GET",
             f"/api/v2/security_objects/units/balance/?vin={vin}&unitId={unit_id}",

@@ -1,10 +1,27 @@
 from __future__ import annotations
 
+import json
 from unittest.mock import Mock
 
 import pytest
 
 from custom_components.cesar_smart.sensor import CesarSimBalanceSensor
+
+BALANCE_LIST_RESPONSE = [
+    {
+        "unitId": "<REDACTED_UNIT_ID>",
+        "unitClass": "GUARD",
+        "balance1": {
+            "phone": "<REDACTED_PHONE>",
+            "client": False,
+            "communicationService": True,
+            "balance": "18",
+            "message": None,
+            "lastUpdated": "2026-01-01T00:00:00.000",
+        },
+        "balance2": None,
+    }
+]
 
 
 @pytest.fixture
@@ -110,3 +127,37 @@ def test_icon_is_sim(mock_entry):
     coordinator = _make_coordinator({})
     sensor = CesarSimBalanceSensor(coordinator, mock_entry)
     assert sensor.icon == "mdi:sim"
+
+
+def test_native_value_with_list_response(mock_entry):
+    coordinator = _make_coordinator({"balance": BALANCE_LIST_RESPONSE})
+    sensor = CesarSimBalanceSensor(coordinator, mock_entry)
+    assert sensor.native_value == 18.0
+
+
+def test_extra_state_attributes_with_list_response(mock_entry):
+    coordinator = _make_coordinator({"balance": BALANCE_LIST_RESPONSE})
+    sensor = CesarSimBalanceSensor(coordinator, mock_entry)
+    attrs = sensor.extra_state_attributes
+    assert attrs is not None
+    assert attrs["currency"] == "RUB"
+    assert attrs["updated_at"] == "2026-01-01T00:00:00.000"
+    assert attrs["phone"] == "<REDACTED_PHONE>"
+    assert attrs["unit_id"] == "<REDACTED_UNIT_ID>"
+    assert attrs["unit_class"] == "GUARD"
+    assert attrs["communication_service"] is True
+    assert attrs["parsed_value"] == 18.0
+
+
+def test_debug_attributes_list_response_no_sensitive_data(mock_entry):
+    coordinator = _make_coordinator(
+        {"balance": BALANCE_LIST_RESPONSE, "balance_raw": BALANCE_LIST_RESPONSE},
+        debug=True,
+    )
+    sensor = CesarSimBalanceSensor(coordinator, mock_entry)
+    attrs = sensor.extra_state_attributes
+    assert attrs is not None
+    raw_text = json.dumps(attrs.get("raw_balance", {}), ensure_ascii=False)
+    assert "<REDACTED_PHONE>" in raw_text
+    assert "<REDACTED_UNIT_ID>" in raw_text
+    assert "+7" not in raw_text

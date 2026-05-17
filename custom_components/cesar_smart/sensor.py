@@ -19,10 +19,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
 from .data_extractors import (
+    extract_balance_communication_service,
     extract_balance_currency,
+    extract_balance_phone,
+    extract_balance_unit_class,
+    extract_balance_unit_id,
     extract_balance_updated_at,
     extract_balance_value,
     extract_statuses_from_full_info,
+    redact_phone,
+    redact_sensitive_balance,
+    redact_unit_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -202,14 +209,20 @@ class CesarSimBalanceSensor(CesarBaseEntity, SensorEntity):
         data = self.coordinator.data or {}
         balance = data.get("balance")
         balance_raw = data.get("balance_raw")
+        source = balance if balance is not None else balance_raw
         attrs: dict = {
-            "currency": extract_balance_currency(balance or balance_raw),
-            "updated_at": extract_balance_updated_at(balance or balance_raw),
+            "currency": extract_balance_currency(source) or "RUB",
+            "updated_at": extract_balance_updated_at(source),
+            "phone": redact_phone(extract_balance_phone(source)),
+            "unit_id": redact_unit_id(extract_balance_unit_id(source)),
+            "unit_class": extract_balance_unit_class(source),
+            "communication_service": extract_balance_communication_service(source),
             "has_balance_data": balance is not None,
             "balance_type": type(balance).__name__ if balance is not None else "None",
-            "parsed_value": extract_balance_value(balance or balance_raw),
+            "parsed_value": extract_balance_value(source),
         }
         if self.coordinator._debug_attributes:
-            attrs["raw_balance"] = balance
-            attrs["raw_balance_response"] = balance_raw
+            attrs["raw_balance_type"] = type(balance).__name__ if balance is not None else "None"
+            attrs["raw_balance"] = redact_sensitive_balance(balance)
+            attrs["raw_balance_response"] = redact_sensitive_balance(balance_raw)
         return {k: v for k, v in attrs.items() if v is not None}

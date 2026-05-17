@@ -8,9 +8,15 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CesarSmartCoordinator
 from .data_extractors import (
+    extract_balance_communication_service,
     extract_balance_currency,
+    extract_balance_phone,
+    extract_balance_unit_class,
+    extract_balance_unit_id,
     extract_balance_updated_at,
     extract_balance_value,
+    redact_phone,
+    redact_unit_id,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +41,14 @@ async def _handle_balance_probe(hass: HomeAssistant, call: ServiceCall) -> None:
         _LOGGER.warning("balance_probe: no coordinators found")
         return
 
-    targets = {entry_id: coordinators[entry_id]} if entry_id else coordinators
+    if entry_id:
+        coordinator = coordinators.get(entry_id)
+        if not coordinator:
+            _LOGGER.warning("balance_probe requested unknown entry_id=%s", entry_id)
+            return
+        targets = {entry_id: coordinator}
+    else:
+        targets = coordinators
     for eid, coordinator in targets.items():
         try:
             await coordinator.async_refresh_token_if_needed()
@@ -43,14 +56,23 @@ async def _handle_balance_probe(hass: HomeAssistant, call: ServiceCall) -> None:
             response = await coordinator.api.async_get_balance(
                 token, coordinator._vin, coordinator._unit_id,
             )
-            _LOGGER.debug("=== balance_probe entry=%s ===", eid)
-            _LOGGER.debug("response type=%s", type(response).__name__)
-            if isinstance(response, dict):
-                _LOGGER.debug("response keys=%s", list(response.keys()))
             value = extract_balance_value(response)
             currency = extract_balance_currency(response)
             updated = extract_balance_updated_at(response)
-            _LOGGER.debug("extracted value=%s currency=%s updated_at=%s", value, currency, updated)
+            phone = redact_phone(extract_balance_phone(response))
+            unit_id = redact_unit_id(extract_balance_unit_id(response))
+            unit_class = extract_balance_unit_class(response)
+            comms = extract_balance_communication_service(response)
+            _LOGGER.debug(
+                "SIM balance probe entry=%s type=%s len=%s "
+                "value=%s currency=%s updated_at=%s "
+                "unit_id=%s unit_class=%s communication_service=%s phone=%s",
+                eid,
+                type(response).__name__,
+                len(response) if isinstance(response, list) else None,
+                value, currency, updated,
+                unit_id, unit_class, comms, phone,
+            )
             coordinator._balance_raw_data = response
             coordinator._balance_data = response
             current = coordinator.data or {}

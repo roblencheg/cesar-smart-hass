@@ -73,10 +73,19 @@ If the SIM Balance sensor shows `unknown`:
 3. If still unknown, call `cesar_smart.balance_probe` which directly invokes the balance endpoint and writes diagnostic info to the Home Assistant log
 4. Check the logs for lines starting with:
    - `SIM balance raw response keys=`
-   - `extracted value=`
-   - `currency=`
+   - `SIM balance probe`
 
-The `balance_probe` service immediately queries the balance API and updates the sensor data, even outside the normal polling schedule.
+The Cesar balance API returns data in a list structure:
+```
+data[0].balance1.balance
+```
+
+Example safe log output:
+```
+SIM balance probe type=list len=1 value=18.0 currency=RUB updated_at=...
+```
+
+The `balance_probe` service immediately queries the balance API and updates the sensor data, even outside the normal polling schedule. Sensitive data (phone, unitId, VIN) is always redacted in attributes and logs.
 
 ---
 
