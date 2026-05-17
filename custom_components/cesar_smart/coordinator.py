@@ -207,7 +207,9 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                             self._balance_last_update = now
                             _LOGGER.debug(
                                 "SIM balance data keys=%s",
-                                list(balance.keys()) if isinstance(balance, dict) else type(balance).__name__,
+                                list(balance.keys())
+                                if isinstance(balance, dict)
+                                else type(balance).__name__,
                             )
                     except Exception as err:
                         _LOGGER.warning("SIM balance request failed: %s", err)

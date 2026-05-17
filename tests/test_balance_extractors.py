@@ -31,7 +31,10 @@ def test_currency_nested_data():
 
 
 def test_updated_at():
-    assert extract_balance_updated_at({"updatedAt": "2026-05-17T10:00:00Z"}) == "2026-05-17T10:00:00Z"
+    assert (
+        extract_balance_updated_at({"updatedAt": "2026-05-17T10:00:00Z"})
+        == "2026-05-17T10:00:00Z"
+    )
 
 
 def test_none_input():

@@ -94,7 +94,10 @@ def _recursive_find_statuses(
             _recursive_find_statuses(item, result, depth + 1, max_depth)
 
 
-_BALANCE_VALUE_KEYS = {"balance", "value", "amount", "sum", "money", "accountBalance", "simBalance", "rest"}
+_BALANCE_VALUE_KEYS = {
+    "balance", "value", "amount", "sum", "money",
+    "accountBalance", "simBalance", "rest",
+}
 _BALANCE_CURRENCY_KEYS = {"currency", "currencyCode", "curr", "unit", "balanceCurrency"}
 _BALANCE_DATE_KEYS = {"updatedAt", "updateDate", "date", "timestamp"}
 
