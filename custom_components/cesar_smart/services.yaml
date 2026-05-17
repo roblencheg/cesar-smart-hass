@@ -1,0 +1,18 @@
+force_refresh:
+  name: Force Refresh
+  description: "Force HA to immediately poll the Cesar Smart API for fresh data. Does NOT send any command to the vehicle. This is a read-only operation."
+  fields:
+    entry_id:
+      name: Config Entry ID
+      description: "Optional config entry ID to refresh. If omitted, refreshes all entries."
+      example: "01JQXYZ..."
+      required: false
+      selector:
+        text:
+    include_full_info:
+      name: Include Full Info
+      description: "Also reset the full info poll timer so it fetches fresh data."
+      default: true
+      required: false
+      selector:
+        boolean:

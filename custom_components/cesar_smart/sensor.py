@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
+from .const import CONF_DEBUG_ATTRIBUTES, DEFAULT_DEBUG_ATTRIBUTES, DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class CesarStatusSensor(CesarBaseEntity, SensorEntity):
         self._attr_entity_registry_enabled_default = not config.get("disabled_by_default", False)
 
         unit = config.get("unit")
-        if unit == "°C":
+        if unit == "\u00b0C":
             self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         elif unit == "V":
             self._attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
@@ -105,6 +105,33 @@ class CesarStatusSensor(CesarBaseEntity, SensorEntity):
             fuel_type = statuses.get("FUEL_TYPE", "LITER")
             self._attr_native_unit_of_measurement = FUEL_UNIT_MAP.get(fuel_type, "%")
         return val
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        debug = self.coordinator._debug_attributes
+        if not debug:
+            return None
+
+        data = self.coordinator.data or {}
+        statuses_raw = data.get("statuses_raw", {})
+        full_info = data.get("full_info")
+
+        attrs: dict = {
+            "source_key": self._source_key,
+            "coordinator_last_update": self.coordinator.last_update,
+            "raw_status_value": statuses_raw.get(self._source_key),
+        }
+
+        if full_info and "data" in full_info:
+            attrs["full_info_value"] = full_info.get("data", {}).get(self._source_key)
+
+        if self._source_key in (data.get("statuses") or {}):
+            raw = statuses_raw.get(self._source_key)
+            merged = data["statuses"].get(self._source_key)
+            if raw != merged:
+                attrs["source"] = "full_info_merged"
+
+        return attrs
 
 
 class CesarLastUpdateSensor(CesarBaseEntity, SensorEntity):
@@ -135,7 +162,7 @@ class CesarLocationSpeedSensor(CesarBaseEntity, SensorEntity):
 class CesarLocationCourseSensor(CesarBaseEntity, SensorEntity):
     def __init__(self, coordinator: CesarSmartCoordinator, entry: ConfigEntry):
         super().__init__(coordinator, entry, "Location Course", "location_course")
-        self._attr_native_unit_of_measurement = "°"
+        self._attr_native_unit_of_measurement = "\u00b0"
         self._attr_icon = "mdi:compass"
         self._attr_entity_registry_enabled_default = False
 

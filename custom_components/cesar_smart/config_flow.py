@@ -8,8 +8,11 @@ from homeassistant.core import callback
 
 from .api import CesarSmartApiClient
 from .const import (
+    CONF_DEBUG_ATTRIBUTES,
     CONF_DEVICE_ID,
+    CONF_ENABLE_FULL_INFO,
     CONF_ENABLE_WEBSOCKET,
+    CONF_FULL_INFO_INTERVAL,
     CONF_LOCATION_INTERVAL,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -17,10 +20,14 @@ from .const import (
     CONF_USERNAME,
     CONF_VEHICLE_NAME,
     CONF_VIN,
+    DEFAULT_DEBUG_ATTRIBUTES,
+    DEFAULT_ENABLE_FULL_INFO,
     DEFAULT_ENABLE_WEBSOCKET,
+    DEFAULT_FULL_INFO_INTERVAL,
     DEFAULT_LOCATION_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MIN_FULL_INFO_INTERVAL,
     MIN_LOCATION_INTERVAL,
     MIN_SCAN_INTERVAL,
 )
@@ -147,5 +154,26 @@ class CesarSmartOptionsFlow(config_entries.OptionsFlow):
                         DEFAULT_LOCATION_INTERVAL,
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=MIN_LOCATION_INTERVAL)),
+                vol.Optional(
+                    CONF_ENABLE_FULL_INFO,
+                    default=self._config_entry.options.get(
+                        CONF_ENABLE_FULL_INFO,
+                        DEFAULT_ENABLE_FULL_INFO,
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_FULL_INFO_INTERVAL,
+                    default=self._config_entry.options.get(
+                        CONF_FULL_INFO_INTERVAL,
+                        DEFAULT_FULL_INFO_INTERVAL,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=MIN_FULL_INFO_INTERVAL)),
+                vol.Optional(
+                    CONF_DEBUG_ATTRIBUTES,
+                    default=self._config_entry.options.get(
+                        CONF_DEBUG_ATTRIBUTES,
+                        DEFAULT_DEBUG_ATTRIBUTES,
+                    ),
+                ): bool,
             }),
         )

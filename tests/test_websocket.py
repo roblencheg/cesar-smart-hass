@@ -99,3 +99,35 @@ def test_normalize_ws_location_other_cased():
     assert n["latitude"] == 1.0
     assert n["longitude"] == 2.0
     assert n["speedKm"] == 30.0
+
+
+@pytest.mark.asyncio
+async def test_ws_status_changed_triggers_full_info():
+    coordinator = Mock()
+    coordinator._enable_full_info = True
+    coordinator.data = {"statuses": {}, "statuses_raw": {}}
+    coordinator.async_update_ws_statuses = AsyncMock(
+        side_effect=lambda *a, **kw: coordinator.data.update(
+            statuses=kw.get("statuses", {}) or a[0]
+            if a
+            else {},
+            statuses_raw={},
+        )
+    )
+    coordinator.async_get_full_info_with_merge = AsyncMock()
+    ws = CesarSmartWebSocket(Mock(), "token", "dev", coordinator)
+    payload = {"PUSH_TYPE": "STATUS_CHANGED"}
+    await ws._handle_event(payload)
+    coordinator.async_get_full_info_with_merge.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_ws_status_changed_full_info_disabled():
+    coordinator = Mock()
+    coordinator._enable_full_info = False
+    coordinator.async_update_ws_statuses = AsyncMock()
+    coordinator.async_get_full_info_with_merge = AsyncMock()
+    ws = CesarSmartWebSocket(Mock(), "token", "dev", coordinator)
+    payload = {"PUSH_TYPE": "STATUS_CHANGED"}
+    await ws._handle_event(payload)
+    coordinator.async_get_full_info_with_merge.assert_not_awaited()

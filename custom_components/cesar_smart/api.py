@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import base64
 import logging
+import time
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import aiohttp
 
@@ -15,6 +17,25 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+_REDACT_WORDS = {
+    "access_token",
+    "refresh_token",
+    "password",
+    "authorization",
+    "bearer",
+    "basic",
+}
+
+
+def _redact_sensitive(value: Any) -> Any:
+    """Redact sensitive strings from debug logs."""
+    if isinstance(value, str):
+        lower = value.lower()
+        if len(value) > 8 and any(w in lower for w in _REDACT_WORDS):
+            return value[:4] + "**REDACTED**"
+        return value
+    return value
 
 
 class CesarSmartAuthError(Exception):
@@ -98,14 +119,25 @@ class CesarSmartApiClient:
             "X-CS-TW-PLATFORM": "ANDROID",
         }
         headers.update(kwargs.pop("headers", {}))
+        start = time.monotonic()
         async with self._s.request(method, url, headers=headers, **kwargs) as resp:
+            elapsed = int((time.monotonic() - start) * 1000)
             if resp.status == 401:
                 raise CesarSmartAuthError("Token expired")
             if resp.status != 200:
                 text = await resp.text()
                 _LOGGER.error("API error %s %s: %s", method, url, text)
                 raise CesarSmartApiError(f"API error {resp.status}")
-            return await resp.json()
+            result = await resp.json()
+            _LOGGER.debug(
+                "%s %s status=%s %sms keys=%s",
+                method,
+                path,
+                resp.status,
+                elapsed,
+                list(result.keys()) if isinstance(result, dict) else type(result).__name__,
+            )
+            return result
 
     async def async_get_security_objects(self, access_token: str) -> list[dict]:
         data = await self._request("GET", "/api/v2/security_objects/", access_token)
@@ -120,7 +152,9 @@ class CesarSmartApiClient:
         data = await self._request(
             "GET", f"/api/v2/security_objects/units/statuses?unitId={unit_id}", access_token
         )
-        return data.get("data", {})
+        result = data.get("data", {})
+        _LOGGER.debug("Statuses keys: %s", list(result.keys()))
+        return result
 
     async def async_get_location(self, access_token: str, unit_id: str) -> dict | None:
         data = await self._request(

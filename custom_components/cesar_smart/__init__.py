@@ -1,5 +1,6 @@
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, PLATFORMS
@@ -7,10 +8,31 @@ from .coordinator import CesarSmartCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+FORCE_REFRESH_SCHEMA = vol.Schema({
+    vol.Optional("entry_id"): cv.string,
+    vol.Optional("include_full_info", default=True): cv.boolean,
+})
+
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Cesar Smart integration from YAML (not supported)."""
     return True
+
+
+async def _handle_force_refresh(hass: HomeAssistant, call: ServiceCall) -> None:
+    entry_id = call.data.get("entry_id")
+    include_full_info = call.data.get("include_full_info", True)
+
+    coordinators: dict[str, CesarSmartCoordinator] = hass.data.get(DOMAIN, {})
+    if not coordinators:
+        return
+
+    targets = {entry_id: coordinators[entry_id]} if entry_id else coordinators
+    for eid, coordinator in targets.items():
+        if include_full_info:
+            coordinator._full_info_last_update = None
+            coordinator._location_last_update = None
+        await coordinator.async_request_refresh()
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = CesarSmartCoordinator(hass, entry)
@@ -18,7 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_start_websocket()
+
+    if not hass.services.has_service(DOMAIN, "force_refresh"):
+        hass.services.async_register(
+            DOMAIN,
+            "force_refresh",
+            _handle_force_refresh,
+            schema=FORCE_REFRESH_SCHEMA,
+        )
+
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
