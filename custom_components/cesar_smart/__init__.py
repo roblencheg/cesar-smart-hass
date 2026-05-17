@@ -1,3 +1,5 @@
+import logging
+
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -5,6 +7,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CesarSmartCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -26,7 +30,14 @@ async def _handle_force_refresh(hass: HomeAssistant, call: ServiceCall) -> None:
     if not coordinators:
         return
 
-    targets = {entry_id: coordinators[entry_id]} if entry_id else coordinators
+    if entry_id:
+        coordinator = coordinators.get(entry_id)
+        if not coordinator:
+            _LOGGER.warning("force_refresh requested unknown entry_id=%s", entry_id)
+            return
+        targets = {entry_id: coordinator}
+    else:
+        targets = coordinators
     for eid, coordinator in targets.items():
         if include_full_info:
             coordinator._full_info_last_update = None

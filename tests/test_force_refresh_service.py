@@ -55,3 +55,30 @@ async def test_force_refresh_no_coordinators():
     hass.data = {}
     call = ServiceCall(DOMAIN, "force_refresh", {})
     await _handle_force_refresh(hass, call)
+
+
+@pytest.mark.asyncio
+async def test_force_refresh_unknown_entry_id():
+    hass = Mock()
+    hass.data = {DOMAIN: {"entry1": Mock()}}
+    call = ServiceCall(DOMAIN, "force_refresh", {"entry_id": "nonexistent"})
+    await _handle_force_refresh(hass, call)
+
+
+@pytest.mark.asyncio
+async def test_force_refresh_include_full_info_resets_timestamps():
+    coordinator = Mock()
+    coordinator.async_request_refresh = AsyncMock()
+    hass = Mock()
+    hass.data = {DOMAIN: {"entry1": coordinator}}
+
+    call = ServiceCall(DOMAIN, "force_refresh", {
+        "entry_id": "entry1", "include_full_info": True
+    })
+    await _handle_force_refresh(hass, call)
+    assert coordinator._full_info_last_update is None
+    assert coordinator._location_last_update is None
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+

@@ -13,6 +13,7 @@ from .const import (
     CONF_ENABLE_FULL_INFO,
     CONF_ENABLE_WEBSOCKET,
     CONF_FULL_INFO_INTERVAL,
+    CONF_FULL_INFO_MERGE_MODE,
     CONF_LOCATION_INTERVAL,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -24,9 +25,13 @@ from .const import (
     DEFAULT_ENABLE_FULL_INFO,
     DEFAULT_ENABLE_WEBSOCKET,
     DEFAULT_FULL_INFO_INTERVAL,
+    DEFAULT_FULL_INFO_MERGE_MODE,
     DEFAULT_LOCATION_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MERGE_MODE_FILL_MISSING_ONLY,
+    MERGE_MODE_PREFER_FULL_INFO,
+    MERGE_MODE_PREFER_STATUSES,
     MIN_FULL_INFO_INTERVAL,
     MIN_LOCATION_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -168,6 +173,17 @@ class CesarSmartOptionsFlow(config_entries.OptionsFlow):
                         DEFAULT_FULL_INFO_INTERVAL,
                     ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=MIN_FULL_INFO_INTERVAL)),
+                vol.Optional(
+                    CONF_FULL_INFO_MERGE_MODE,
+                    default=self._config_entry.options.get(
+                        CONF_FULL_INFO_MERGE_MODE,
+                        DEFAULT_FULL_INFO_MERGE_MODE,
+                    ),
+                ): vol.In({
+                    MERGE_MODE_PREFER_FULL_INFO: "Prefer full_info",
+                    MERGE_MODE_PREFER_STATUSES: "Prefer statuses",
+                    MERGE_MODE_FILL_MISSING_ONLY: "Fill missing only",
+                }),
                 vol.Optional(
                     CONF_DEBUG_ATTRIBUTES,
                     default=self._config_entry.options.get(

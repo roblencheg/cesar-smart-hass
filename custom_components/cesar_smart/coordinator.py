@@ -14,6 +14,7 @@ from .const import (
     CONF_ENABLE_FULL_INFO,
     CONF_ENABLE_WEBSOCKET,
     CONF_FULL_INFO_INTERVAL,
+    CONF_FULL_INFO_MERGE_MODE,
     CONF_LOCATION_INTERVAL,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -24,6 +25,7 @@ from .const import (
     DEFAULT_ENABLE_FULL_INFO,
     DEFAULT_ENABLE_WEBSOCKET,
     DEFAULT_FULL_INFO_INTERVAL,
+    DEFAULT_FULL_INFO_MERGE_MODE,
     DEFAULT_LOCATION_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -77,6 +79,11 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         )
         self._full_info_last_update: datetime | None = None
         self._full_info_data: dict | None = None
+
+        self._full_info_merge_mode = entry.options.get(
+            CONF_FULL_INFO_MERGE_MODE,
+            entry.data.get(CONF_FULL_INFO_MERGE_MODE, DEFAULT_FULL_INFO_MERGE_MODE),
+        )
 
         self._debug_attributes = entry.options.get(
             CONF_DEBUG_ATTRIBUTES,
@@ -149,7 +156,9 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
             data["statuses_raw"] = statuses
 
             if self._full_info_data:
-                data["statuses"] = merge_status_sources(statuses, self._full_info_data)
+                data["statuses"] = merge_status_sources(
+                    statuses, self._full_info_data, mode=self._full_info_merge_mode,
+                )
                 statuses_keys = list(statuses.keys())
                 merged_keys = list(data["statuses"].keys())
                 if set(statuses_keys) != set(merged_keys):
@@ -209,7 +218,9 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                 "full_info": self._full_info_data,
             }
             if self._full_info_data:
-                new_data["statuses"] = merge_status_sources(statuses, self._full_info_data)
+                new_data["statuses"] = merge_status_sources(
+                    statuses, self._full_info_data, mode=self._full_info_merge_mode,
+                )
             else:
                 new_data["statuses"] = statuses
             self.async_set_updated_data(new_data)

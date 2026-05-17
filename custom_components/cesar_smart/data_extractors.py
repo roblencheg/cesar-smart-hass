@@ -3,16 +3,22 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from .const import (
+    MERGE_MODE_FILL_MISSING_ONLY,
+    MERGE_MODE_PREFER_FULL_INFO,
+    MERGE_MODE_PREFER_STATUSES,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-_DIFF_KEYS = (
+_MERGE_SUMMARY_KEYS = {
     "ENGINE_TEMP",
     "SALON_TEMP",
     "OUTDOOR_TEMP",
     "FUEL_VALUE",
     "MILEAGE_KM",
     "VEHICLE_CHARGE_VOLT",
-)
+}
 
 _STATUS_KEYS = {
     "ENGINE_TEMP",
@@ -88,21 +94,37 @@ def _recursive_find_statuses(
             _recursive_find_statuses(item, result, depth + 1, max_depth)
 
 
-def merge_status_sources(statuses: dict, full_info: dict | None) -> dict:
+def merge_status_sources(
+    statuses: dict,
+    full_info: dict | None,
+    mode: str = MERGE_MODE_PREFER_FULL_INFO,
+) -> dict:
     merged = dict(statuses)
     if not full_info:
         return merged
 
     extracted = extract_statuses_from_full_info(full_info)
+
     for key, val in extracted.items():
-        if val is not None and val != "":
-            old = merged.get(key)
-            if old != val:
-                if key in _DIFF_KEYS:
-                    _LOGGER.debug(
-                        "Status merge %s: statuses=%s full_info=%s merged=%s",
-                        key, old, val, val,
-                    )
-            merged[key] = val
+        old = merged.get(key)
+
+        if mode == MERGE_MODE_PREFER_FULL_INFO:
+            if val is not None and val != "":
+                merged[key] = val
+        elif mode == MERGE_MODE_PREFER_STATUSES:
+            if key not in merged:
+                if val is not None and val != "":
+                    merged[key] = val
+        elif mode == MERGE_MODE_FILL_MISSING_ONLY:
+            if old is None or old == "":
+                if val is not None and val != "":
+                    merged[key] = val
+
+        new = merged.get(key)
+        if key in _MERGE_SUMMARY_KEYS:
+            _LOGGER.debug(
+                "Status merge summary %s: raw=%s full_info=%s merged=%s mode=%s",
+                key, old, val, new, mode,
+            )
 
     return merged

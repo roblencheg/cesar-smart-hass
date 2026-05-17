@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
+from .data_extractors import extract_statuses_from_full_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,8 +123,9 @@ class CesarStatusSensor(CesarBaseEntity, SensorEntity):
             "raw_status_value": statuses_raw.get(self._source_key),
         }
 
-        if full_info and "data" in full_info:
-            attrs["full_info_value"] = full_info.get("data", {}).get(self._source_key)
+        if full_info:
+            extracted_full = extract_statuses_from_full_info(full_info)
+            attrs["full_info_value"] = extracted_full.get(self._source_key)
 
         if self._source_key in (data.get("statuses") or {}):
             raw = statuses_raw.get(self._source_key)
