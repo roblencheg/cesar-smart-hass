@@ -9,8 +9,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import CesarSmartApiClient, CesarSmartAuthError
 from .const import (
+    CONF_BALANCE_INTERVAL,
     CONF_DEBUG_ATTRIBUTES,
     CONF_DEVICE_ID,
+    CONF_ENABLE_BALANCE,
     CONF_ENABLE_FULL_INFO,
     CONF_ENABLE_WEBSOCKET,
     CONF_FULL_INFO_INTERVAL,
@@ -21,7 +23,9 @@ from .const import (
     CONF_UNIT_ID,
     CONF_USERNAME,
     CONF_VIN,
+    DEFAULT_BALANCE_INTERVAL,
     DEFAULT_DEBUG_ATTRIBUTES,
+    DEFAULT_ENABLE_BALANCE,
     DEFAULT_ENABLE_FULL_INFO,
     DEFAULT_ENABLE_WEBSOCKET,
     DEFAULT_FULL_INFO_INTERVAL,
@@ -61,6 +65,18 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         self._location_last_update: datetime | None = None
         self._location_data: dict | None = None
         self._balance_data: dict | None = None
+
+        self._enable_balance = entry.options.get(
+            CONF_ENABLE_BALANCE,
+            entry.data.get(CONF_ENABLE_BALANCE, DEFAULT_ENABLE_BALANCE),
+        )
+        self._balance_interval = timedelta(
+            seconds=entry.options.get(
+                CONF_BALANCE_INTERVAL,
+                entry.data.get(CONF_BALANCE_INTERVAL, DEFAULT_BALANCE_INTERVAL),
+            )
+        )
+        self._balance_last_update: datetime | None = None
 
         self._enable_ws = entry.options.get(
             CONF_ENABLE_WEBSOCKET, entry.data.get(CONF_ENABLE_WEBSOCKET, DEFAULT_ENABLE_WEBSOCKET)
@@ -179,6 +195,24 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                     self._location_last_update = now
             data["location"] = self._location_data
 
+            if self._enable_balance and self._vin and self._unit_id:
+                if (
+                    self._balance_last_update is None
+                    or (now - self._balance_last_update) >= self._balance_interval
+                ):
+                    try:
+                        balance = await self.api.async_get_balance(token, self._vin, self._unit_id)
+                        if balance is not None:
+                            self._balance_data = balance
+                            self._balance_last_update = now
+                            _LOGGER.debug(
+                                "SIM balance data keys=%s",
+                                list(balance.keys()) if isinstance(balance, dict) else type(balance).__name__,
+                            )
+                    except Exception as err:
+                        _LOGGER.warning("SIM balance request failed: %s", err)
+            data["balance"] = self._balance_data
+
             return data
 
         except CesarSmartAuthError:
@@ -191,6 +225,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                     "statuses_raw": statuses,
                     "location": self._location_data,
                     "full_info": self._full_info_data,
+                    "balance": self._balance_data,
                 }
                 return data
             except Exception as err:
@@ -216,6 +251,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                 **current,
                 "statuses_raw": statuses,
                 "full_info": self._full_info_data,
+                "balance": self._balance_data,
             }
             if self._full_info_data:
                 new_data["statuses"] = merge_status_sources(

@@ -94,6 +94,81 @@ def _recursive_find_statuses(
             _recursive_find_statuses(item, result, depth + 1, max_depth)
 
 
+_BALANCE_VALUE_KEYS = {"balance", "value", "amount", "sum", "money", "accountBalance", "simBalance", "rest"}
+_BALANCE_CURRENCY_KEYS = {"currency", "currencyCode", "curr", "unit", "balanceCurrency"}
+_BALANCE_DATE_KEYS = {"updatedAt", "updateDate", "date", "timestamp"}
+
+
+def extract_balance_value(balance: dict | None) -> float | str | None:
+    if balance is None:
+        return None
+    if isinstance(balance, (int, float)):
+        return float(balance)
+    if isinstance(balance, str):
+        return balance
+
+    data = balance.get("data")
+    if isinstance(data, dict):
+        for key in _BALANCE_VALUE_KEYS:
+            val = data.get(key)
+            if val is not None:
+                return _to_number(val)
+
+    for key in _BALANCE_VALUE_KEYS:
+        val = balance.get(key)
+        if val is not None:
+            return _to_number(val)
+
+    if isinstance(balance, dict):
+        for val in balance.values():
+            if isinstance(val, (int, float)):
+                return float(val)
+    return None
+
+
+def extract_balance_currency(balance: dict | None) -> str | None:
+    if not isinstance(balance, dict):
+        return None
+    data = balance.get("data")
+    if isinstance(data, dict):
+        for key in _BALANCE_CURRENCY_KEYS:
+            val = data.get(key)
+            if val is not None:
+                return str(val)
+    for key in _BALANCE_CURRENCY_KEYS:
+        val = balance.get(key)
+        if val is not None:
+            return str(val)
+    return None
+
+
+def extract_balance_updated_at(balance: dict | None) -> str | None:
+    if not isinstance(balance, dict):
+        return None
+    data = balance.get("data")
+    if isinstance(data, dict):
+        for key in _BALANCE_DATE_KEYS:
+            val = data.get(key)
+            if val is not None:
+                return str(val)
+    for key in _BALANCE_DATE_KEYS:
+        val = balance.get(key)
+        if val is not None:
+            return str(val)
+    return None
+
+
+def _to_number(val: Any) -> float | str | None:
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return val
+    return None
+
+
 def merge_status_sources(
     statuses: dict,
     full_info: dict | None,

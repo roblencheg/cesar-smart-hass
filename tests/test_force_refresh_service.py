@@ -81,4 +81,31 @@ async def test_force_refresh_include_full_info_resets_timestamps():
     coordinator.async_request_refresh.assert_awaited_once()
 
 
+@pytest.mark.asyncio
+async def test_force_refresh_include_balance_resets_timestamp():
+    coordinator = Mock()
+    coordinator.async_request_refresh = AsyncMock()
+    hass = Mock()
+    hass.data = {DOMAIN: {"entry1": coordinator}}
+
+    call = ServiceCall(DOMAIN, "force_refresh", {
+        "entry_id": "entry1", "include_balance": True
+    })
+    await _handle_force_refresh(hass, call)
+    assert coordinator._balance_last_update is None
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_force_refresh_include_balance_default():
+    coordinator = Mock()
+    coordinator.async_request_refresh = AsyncMock()
+    hass = Mock()
+    hass.data = {DOMAIN: {"entry1": coordinator}}
+
+    call = ServiceCall(DOMAIN, "force_refresh", {"entry_id": "entry1"})
+    await _handle_force_refresh(hass, call)
+    assert coordinator._balance_last_update is None
+
+
 

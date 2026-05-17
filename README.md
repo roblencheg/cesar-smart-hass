@@ -20,6 +20,7 @@
 - Configurable polling intervals
 - Multi-language support (English, Russian)
 - Privacy-focused: sensitive data is redacted in diagnostics
+- SIM Balance monitoring (disabled by default)
 
 ## Installation
 
@@ -54,7 +55,7 @@
 - Left/Right Side Temperature (disabled by default)
 - Label, Last Update
 - Location Speed, Location Course (course disabled by default)
-- SIM Balance (disabled by default)
+- SIM Balance (disabled by default) — value, currency, last updated
 
 ### Binary Sensors
 - Ignition, Hood, Doors (4x), Trunk, Engine Running
@@ -108,6 +109,7 @@ MIT License
 - Настраиваемые интервалы опроса
 - Поддержка русского и английского языков
 - Конфиденциальность: чувствительные данные скрыты в диагностике
+- Мониторинг баланса SIM-карты (отключено по умолчанию)
 
 ## Установка
 

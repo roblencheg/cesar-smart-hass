@@ -16,3 +16,10 @@ force_refresh:
       required: false
       selector:
         boolean:
+    include_balance:
+      name: Include SIM Balance
+      description: "Also reset the SIM balance poll timer so it fetches fresh balance data."
+      default: true
+      required: false
+      selector:
+        boolean:

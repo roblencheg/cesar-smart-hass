@@ -8,8 +8,10 @@ from homeassistant.core import callback
 
 from .api import CesarSmartApiClient
 from .const import (
+    CONF_BALANCE_INTERVAL,
     CONF_DEBUG_ATTRIBUTES,
     CONF_DEVICE_ID,
+    CONF_ENABLE_BALANCE,
     CONF_ENABLE_FULL_INFO,
     CONF_ENABLE_WEBSOCKET,
     CONF_FULL_INFO_INTERVAL,
@@ -21,7 +23,9 @@ from .const import (
     CONF_USERNAME,
     CONF_VEHICLE_NAME,
     CONF_VIN,
+    DEFAULT_BALANCE_INTERVAL,
     DEFAULT_DEBUG_ATTRIBUTES,
+    DEFAULT_ENABLE_BALANCE,
     DEFAULT_ENABLE_FULL_INFO,
     DEFAULT_ENABLE_WEBSOCKET,
     DEFAULT_FULL_INFO_INTERVAL,
@@ -32,6 +36,7 @@ from .const import (
     MERGE_MODE_FILL_MISSING_ONLY,
     MERGE_MODE_PREFER_FULL_INFO,
     MERGE_MODE_PREFER_STATUSES,
+    MIN_BALANCE_INTERVAL,
     MIN_FULL_INFO_INTERVAL,
     MIN_LOCATION_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -184,6 +189,20 @@ class CesarSmartOptionsFlow(config_entries.OptionsFlow):
                     MERGE_MODE_PREFER_STATUSES: "Prefer statuses",
                     MERGE_MODE_FILL_MISSING_ONLY: "Fill missing only",
                 }),
+                vol.Optional(
+                    CONF_ENABLE_BALANCE,
+                    default=self._config_entry.options.get(
+                        CONF_ENABLE_BALANCE,
+                        DEFAULT_ENABLE_BALANCE,
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_BALANCE_INTERVAL,
+                    default=self._config_entry.options.get(
+                        CONF_BALANCE_INTERVAL,
+                        DEFAULT_BALANCE_INTERVAL,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=MIN_BALANCE_INTERVAL)),
                 vol.Optional(
                     CONF_DEBUG_ATTRIBUTES,
                     default=self._config_entry.options.get(

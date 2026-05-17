@@ -15,6 +15,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 FORCE_REFRESH_SCHEMA = vol.Schema({
     vol.Optional("entry_id"): cv.string,
     vol.Optional("include_full_info", default=True): cv.boolean,
+    vol.Optional("include_balance", default=True): cv.boolean,
 })
 
 
@@ -25,6 +26,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def _handle_force_refresh(hass: HomeAssistant, call: ServiceCall) -> None:
     entry_id = call.data.get("entry_id")
     include_full_info = call.data.get("include_full_info", True)
+    include_balance = call.data.get("include_balance", True)
 
     coordinators: dict[str, CesarSmartCoordinator] = hass.data.get(DOMAIN, {})
     if not coordinators:
@@ -42,6 +44,8 @@ async def _handle_force_refresh(hass: HomeAssistant, call: ServiceCall) -> None:
         if include_full_info:
             coordinator._full_info_last_update = None
             coordinator._location_last_update = None
+        if include_balance:
+            coordinator._balance_last_update = None
         await coordinator.async_request_refresh()
 
 

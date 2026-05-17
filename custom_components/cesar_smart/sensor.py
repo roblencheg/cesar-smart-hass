@@ -18,7 +18,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
-from .data_extractors import extract_statuses_from_full_info
+from .data_extractors import (
+    extract_balance_currency,
+    extract_balance_updated_at,
+    extract_balance_value,
+    extract_statuses_from_full_info,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +184,23 @@ class CesarSimBalanceSensor(CesarBaseEntity, SensorEntity):
     def __init__(self, coordinator: CesarSmartCoordinator, entry: ConfigEntry):
         super().__init__(coordinator, entry, "SIM Balance", "sim_balance")
         self._attr_entity_registry_enabled_default = False
+        self._attr_icon = "mdi:sim"
+        self._attr_native_unit_of_measurement = "\u20bd"
 
     @property
     def native_value(self):
-        return None
+        balance = (self.coordinator.data or {}).get("balance")
+        return extract_balance_value(balance)
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        balance = (self.coordinator.data or {}).get("balance")
+        if not balance:
+            return None
+        attrs: dict = {
+            "currency": extract_balance_currency(balance),
+            "updated_at": extract_balance_updated_at(balance),
+        }
+        if self.coordinator._debug_attributes:
+            attrs["raw_balance"] = balance
+        return {k: v for k, v in attrs.items() if v is not None}
