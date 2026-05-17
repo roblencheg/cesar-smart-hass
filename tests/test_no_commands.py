@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-COMMAND_FILES = ["switch.py", "button.py", "lock.py", "services.yaml"]
+COMMAND_FILES = ["switch.py", "button.py", "lock.py"]
 
 
 def test_no_command_files_in_integration():

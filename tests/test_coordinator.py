@@ -41,6 +41,10 @@ async def test_coordinator_initialization(mock_hass, mock_entry):
     assert coordinator._unit_id == "unit_123"
 
 
+async def _cleanup(coordinator):
+    await coordinator.api.close()
+
+
 @pytest.mark.asyncio
 async def test_coordinator_update(mock_hass, mock_entry):
     coordinator = CesarSmartCoordinator(mock_hass, mock_entry)
@@ -58,6 +62,7 @@ async def test_coordinator_update(mock_hass, mock_entry):
         assert "statuses" in data
         assert data["statuses"]["ENGINE_STATE"] == "STOPPED"
         assert "location" in data
+    await _cleanup(coordinator)
 
 
 @pytest.mark.asyncio
@@ -85,3 +90,30 @@ async def test_coordinator_merge_full_info(mock_hass, mock_entry):
         assert data["statuses"]["FUEL_VALUE"] == 30
         assert data["statuses_raw"]["ENGINE_TEMP"] == 50
         assert data["full_info"] == fresh_full
+    await _cleanup(coordinator)
+
+
+@pytest.mark.asyncio
+async def test_coordinator_ws_update_fetches_full_info(mock_hass, mock_entry):
+    coordinator = CesarSmartCoordinator(mock_hass, mock_entry)
+    stale = {"ENGINE_TEMP": 50}
+    fresh_full = {"statuses": {"ENGINE_TEMP": 88}}
+
+    with patch.object(
+        coordinator.api, "async_get_unit_statuses",
+        AsyncMock(return_value=stale),
+    ), patch.object(
+        coordinator.api, "async_get_full_info",
+        AsyncMock(return_value=fresh_full),
+    ), patch.object(
+        coordinator, "async_refresh_token_if_needed", AsyncMock()
+    ):
+        coordinator._access_token = "test_token"
+        coordinator._enable_full_info = True
+        await coordinator.async_update_ws_statuses()
+        result = coordinator.data
+        assert result is not None
+        assert result["statuses"]["ENGINE_TEMP"] == 88
+        assert result["statuses_raw"]["ENGINE_TEMP"] == 50
+        assert result["full_info"] == fresh_full
+    await _cleanup(coordinator)
