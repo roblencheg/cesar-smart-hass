@@ -123,9 +123,8 @@ class CesarStatusSensor(CesarBaseEntity, SensorEntity):
             "raw_status_value": statuses_raw.get(self._source_key),
         }
 
-        if full_info:
-            extracted_full = extract_statuses_from_full_info(full_info)
-            attrs["full_info_value"] = extracted_full.get(self._source_key)
+        extracted_full = extract_statuses_from_full_info(full_info) if full_info else {}
+        attrs["full_info_value"] = extracted_full.get(self._source_key)
 
         if self._source_key in (data.get("statuses") or {}):
             raw = statuses_raw.get(self._source_key)
