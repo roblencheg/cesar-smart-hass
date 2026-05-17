@@ -158,13 +158,16 @@ def _to_number(val: Any) -> float | str | None:
 
 
 def _extract_currency_from_string(balance: Any) -> str | None:
-    if not isinstance(balance, (str, dict)):
+    if balance is None:
         return None
     text = ""
     if isinstance(balance, dict):
+        text = " ".join(
+            str(v) for v in balance.values() if isinstance(v, (str, int, float))
+        )
         for val in balance.values():
-            if isinstance(val, str):
-                text += " " + val
+            if isinstance(val, dict):
+                text += " " + _extract_currency_from_string(val) or ""
     elif isinstance(balance, str):
         text = balance
     upper = text.upper()
