@@ -202,4 +202,5 @@ def test_redact_sensitive_balance_list():
 def test_redact_sensitive_balance_secrets():
     data = {"access_token": "secret123", "refresh_token": "secret456", "normal": "keep"}
     redacted = redact_sensitive_balance(data)
-    assert redacted == {"access_token": "<REDACTED>", "refresh_token": "<REDACTED>", "normal": "keep"}
+    expected = {"access_token": "<REDACTED>", "refresh_token": "<REDACTED>", "normal": "keep"}
+    assert redacted == expected
