@@ -97,9 +97,82 @@ def _recursive_find_statuses(
 _BALANCE_VALUE_KEYS = {
     "balance", "value", "amount", "sum", "money",
     "accountBalance", "simBalance", "rest",
+    "currentBalance", "availableBalance", "balanceValue",
+    "balanceAmount", "\u043e\u0441\u0442\u0430\u0442\u043e\u043a",
+    "balans",
 }
-_BALANCE_CURRENCY_KEYS = {"currency", "currencyCode", "curr", "unit", "balanceCurrency"}
-_BALANCE_DATE_KEYS = {"updatedAt", "updateDate", "date", "timestamp"}
+_BALANCE_CURRENCY_KEYS = {
+    "currency", "currencyCode", "curr", "unit", "balanceCurrency",
+}
+_BALANCE_DATE_KEYS = {
+    "updatedAt", "updateDate", "date", "timestamp",
+    "actualDate", "lastUpdate", "lastUpdated",
+}
+_BALANCE_NESTED_PARENT_KEYS = {
+    "data", "result", "payload", "balanceInfo",
+    "account", "sim", "unitBalance", "securityObjectBalance",
+}
+
+
+def _recursive_find_key(
+    data: Any, target_keys: set[str], depth: int, max_depth: int = 5,
+) -> Any:
+    if depth > max_depth:
+        return None
+    if isinstance(data, dict):
+        for key, val in data.items():
+            if key in target_keys and val is not None:
+                return _to_number(val) if target_keys is _BALANCE_VALUE_KEYS else val
+            result = _recursive_find_key(val, target_keys, depth + 1, max_depth)
+            if result is not None:
+                return result
+    elif isinstance(data, list):
+        for item in data:
+            result = _recursive_find_key(item, target_keys, depth + 1, max_depth)
+            if result is not None:
+                return result
+    return None
+
+
+def _normalize_number_string(s: str) -> float | str | None:
+    if not s:
+        return None
+    s = s.strip()
+    s = s.replace(",", ".")
+    import re
+    match = re.search(r"-?\d+(?:\.\d+)?", s)
+    if match:
+        try:
+            return float(match.group())
+        except (ValueError, TypeError):
+            return s
+    return s
+
+
+def _to_number(val: Any) -> float | str | None:
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        return _normalize_number_string(val)
+    return None
+
+
+def _extract_currency_from_string(balance: Any) -> str | None:
+    if not isinstance(balance, (str, dict)):
+        return None
+    text = ""
+    if isinstance(balance, dict):
+        for val in balance.values():
+            if isinstance(val, str):
+                text += " " + val
+    elif isinstance(balance, str):
+        text = balance
+    upper = text.upper()
+    if "\u20bd" in text:
+        return "RUB"
+    if "RUB" in upper:
+        return "RUB"
+    return None
 
 
 def extract_balance_value(balance: dict | None) -> float | str | None:
@@ -108,67 +181,68 @@ def extract_balance_value(balance: dict | None) -> float | str | None:
     if isinstance(balance, (int, float)):
         return float(balance)
     if isinstance(balance, str):
-        return balance
+        return _normalize_number_string(balance)
 
-    data = balance.get("data")
-    if isinstance(data, dict):
-        for key in _BALANCE_VALUE_KEYS:
-            val = data.get(key)
-            if val is not None:
-                return _to_number(val)
+    for parent_key in _BALANCE_NESTED_PARENT_KEYS:
+        parent = balance.get(parent_key)
+        if isinstance(parent, dict):
+            for key in _BALANCE_VALUE_KEYS:
+                val = parent.get(key)
+                if val is not None:
+                    return _to_number(val)
 
     for key in _BALANCE_VALUE_KEYS:
         val = balance.get(key)
         if val is not None:
             return _to_number(val)
 
-    if isinstance(balance, dict):
-        for val in balance.values():
-            if isinstance(val, (int, float)):
-                return float(val)
+    found = _recursive_find_key(balance, _BALANCE_VALUE_KEYS, 0)
+    if found is not None:
+        return found
+
+    for val in balance.values():
+        if isinstance(val, (int, float)):
+            return float(val)
     return None
 
 
 def extract_balance_currency(balance: dict | None) -> str | None:
     if not isinstance(balance, dict):
         return None
-    data = balance.get("data")
-    if isinstance(data, dict):
-        for key in _BALANCE_CURRENCY_KEYS:
-            val = data.get(key)
-            if val is not None:
-                return str(val)
+    for parent_key in _BALANCE_NESTED_PARENT_KEYS:
+        parent = balance.get(parent_key)
+        if isinstance(parent, dict):
+            for key in _BALANCE_CURRENCY_KEYS:
+                val = parent.get(key)
+                if val is not None:
+                    return str(val)
     for key in _BALANCE_CURRENCY_KEYS:
         val = balance.get(key)
         if val is not None:
             return str(val)
-    return None
+    found = _recursive_find_key(balance, _BALANCE_CURRENCY_KEYS, 0)
+    if found is not None:
+        return str(found)
+    return _extract_currency_from_string(balance)
 
 
 def extract_balance_updated_at(balance: dict | None) -> str | None:
     if not isinstance(balance, dict):
         return None
-    data = balance.get("data")
-    if isinstance(data, dict):
-        for key in _BALANCE_DATE_KEYS:
-            val = data.get(key)
-            if val is not None:
-                return str(val)
+    for parent_key in _BALANCE_NESTED_PARENT_KEYS:
+        parent = balance.get(parent_key)
+        if isinstance(parent, dict):
+            for key in _BALANCE_DATE_KEYS:
+                val = parent.get(key)
+                if val is not None:
+                    return str(val)
     for key in _BALANCE_DATE_KEYS:
         val = balance.get(key)
         if val is not None:
             return str(val)
-    return None
-
-
-def _to_number(val: Any) -> float | str | None:
-    if isinstance(val, (int, float)):
-        return float(val)
-    if isinstance(val, str):
-        try:
-            return float(val)
-        except (ValueError, TypeError):
-            return val
+    found = _recursive_find_key(balance, _BALANCE_DATE_KEYS, 0)
+    if found is not None:
+        return str(found)
     return None
 
 

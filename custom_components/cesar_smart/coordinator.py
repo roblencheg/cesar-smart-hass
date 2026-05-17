@@ -65,6 +65,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
         self._location_last_update: datetime | None = None
         self._location_data: dict | None = None
         self._balance_data: dict | None = None
+        self._balance_raw_data: dict | None = None
 
         self._enable_balance = entry.options.get(
             CONF_ENABLE_BALANCE,
@@ -202,6 +203,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                 ):
                     try:
                         balance = await self.api.async_get_balance(token, self._vin, self._unit_id)
+                        self._balance_raw_data = balance
                         if balance is not None:
                             self._balance_data = balance
                             self._balance_last_update = now
@@ -214,6 +216,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                     except Exception as err:
                         _LOGGER.warning("SIM balance request failed: %s", err)
             data["balance"] = self._balance_data
+            data["balance_raw"] = self._balance_raw_data
 
             return data
 
@@ -228,6 +231,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                     "location": self._location_data,
                     "full_info": self._full_info_data,
                     "balance": self._balance_data,
+                    "balance_raw": self._balance_raw_data,
                 }
                 return data
             except Exception as err:
@@ -254,6 +258,7 @@ class CesarSmartCoordinator(DataUpdateCoordinator):
                 "statuses_raw": statuses,
                 "full_info": self._full_info_data,
                 "balance": self._balance_data,
+                "balance_raw": self._balance_raw_data,
             }
             if self._full_info_data:
                 new_data["statuses"] = merge_status_sources(

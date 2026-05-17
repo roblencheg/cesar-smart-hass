@@ -163,12 +163,37 @@ class CesarSmartApiClient:
         return data.get("data")
 
     async def async_get_balance(self, access_token: str, vin: str, unit_id: str) -> dict | None:
-        data = await self._request(
+        response = await self._request(
             "GET",
             f"/api/v2/security_objects/units/balance/?vin={vin}&unitId={unit_id}",
             access_token,
         )
-        return data.get("data")
+        if response is None:
+            return None
+        if not isinstance(response, dict):
+            return response
+        _LOGGER.debug(
+            "SIM balance raw response keys=%s",
+            list(response.keys()),
+        )
+        data = response.get("data")
+        if data is not None:
+            _LOGGER.debug(
+                "SIM balance data type=%s keys=%s",
+                type(data).__name__,
+                list(data.keys()) if isinstance(data, dict) else None,
+            )
+            return data
+        _BALANCE_TOP_KEYS = {
+            "balance", "value", "amount", "sum", "money",
+            "accountBalance", "simBalance", "rest",
+            "currency", "currencyCode",
+        }
+        if any(k in response for k in _BALANCE_TOP_KEYS):
+            _LOGGER.debug("SIM balance using top-level response fallback")
+            return response
+        _LOGGER.debug("SIM balance response has no data field and no known balance keys")
+        return response
 
     async def close(self):
         if self._session:

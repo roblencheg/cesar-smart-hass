@@ -189,18 +189,27 @@ class CesarSimBalanceSensor(CesarBaseEntity, SensorEntity):
 
     @property
     def native_value(self):
-        balance = (self.coordinator.data or {}).get("balance")
-        return extract_balance_value(balance)
+        data = self.coordinator.data or {}
+        balance = data.get("balance")
+        value = extract_balance_value(balance)
+        if value is not None:
+            return value
+        balance_raw = data.get("balance_raw")
+        return extract_balance_value(balance_raw)
 
     @property
     def extra_state_attributes(self) -> dict | None:
-        balance = (self.coordinator.data or {}).get("balance")
-        if not balance:
-            return None
+        data = self.coordinator.data or {}
+        balance = data.get("balance")
+        balance_raw = data.get("balance_raw")
         attrs: dict = {
-            "currency": extract_balance_currency(balance),
-            "updated_at": extract_balance_updated_at(balance),
+            "currency": extract_balance_currency(balance or balance_raw),
+            "updated_at": extract_balance_updated_at(balance or balance_raw),
+            "has_balance_data": balance is not None,
+            "balance_type": type(balance).__name__ if balance is not None else "None",
+            "parsed_value": extract_balance_value(balance or balance_raw),
         }
         if self.coordinator._debug_attributes:
             attrs["raw_balance"] = balance
+            attrs["raw_balance_response"] = balance_raw
         return {k: v for k, v in attrs.items() if v is not None}

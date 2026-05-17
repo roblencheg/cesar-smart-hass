@@ -23,3 +23,15 @@ force_refresh:
       required: false
       selector:
         boolean:
+
+balance_probe:
+  name: SIM Balance Probe
+  description: "Directly call the SIM balance endpoint and log diagnostic info. Read-only, no commands sent to the vehicle."
+  fields:
+    entry_id:
+      name: Config Entry ID
+      description: "Optional config entry ID. If omitted, probes all entries."
+      example: "01JQXYZ..."
+      required: false
+      selector:
+        text:

@@ -64,6 +64,22 @@
 ### Device Tracker
 - GPS location with speed and course attributes
 
+## SIM Balance Troubleshooting
+
+If the SIM Balance sensor shows `unknown`:
+
+1. Enable `debug_attributes` in integration options
+2. Call `cesar_smart.force_refresh` with `include_balance: true`
+3. If still unknown, call `cesar_smart.balance_probe` which directly invokes the balance endpoint and writes diagnostic info to the Home Assistant log
+4. Check the logs for lines starting with:
+   - `SIM balance raw response keys=`
+   - `extracted value=`
+   - `currency=`
+
+The `balance_probe` service immediately queries the balance API and updates the sensor data, even outside the normal polling schedule.
+
+---
+
 ## Known Limitations
 
 - This is an **unofficial** integration using the Cesar Smart mobile API

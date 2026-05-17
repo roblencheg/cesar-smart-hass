@@ -7,6 +7,11 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import CesarSmartCoordinator
+from .data_extractors import (
+    extract_balance_currency,
+    extract_balance_updated_at,
+    extract_balance_value,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +22,45 @@ FORCE_REFRESH_SCHEMA = vol.Schema({
     vol.Optional("include_full_info", default=True): cv.boolean,
     vol.Optional("include_balance", default=True): cv.boolean,
 })
+
+BALANCE_PROBE_SCHEMA = vol.Schema({
+    vol.Optional("entry_id"): cv.string,
+})
+
+
+async def _handle_balance_probe(hass: HomeAssistant, call: ServiceCall) -> None:
+    entry_id = call.data.get("entry_id")
+    coordinators: dict[str, CesarSmartCoordinator] = hass.data.get(DOMAIN, {})
+    if not coordinators:
+        _LOGGER.warning("balance_probe: no coordinators found")
+        return
+
+    targets = {entry_id: coordinators[entry_id]} if entry_id else coordinators
+    for eid, coordinator in targets.items():
+        try:
+            await coordinator.async_refresh_token_if_needed()
+            token = coordinator._access_token
+            response = await coordinator.api.async_get_balance(
+                token, coordinator._vin, coordinator._unit_id,
+            )
+            _LOGGER.debug("=== balance_probe entry=%s ===", eid)
+            _LOGGER.debug("response type=%s", type(response).__name__)
+            if isinstance(response, dict):
+                _LOGGER.debug("response keys=%s", list(response.keys()))
+            value = extract_balance_value(response)
+            currency = extract_balance_currency(response)
+            updated = extract_balance_updated_at(response)
+            _LOGGER.debug("extracted value=%s currency=%s updated_at=%s", value, currency, updated)
+            coordinator._balance_raw_data = response
+            coordinator._balance_data = response
+            current = coordinator.data or {}
+            coordinator.async_set_updated_data({
+                **current,
+                "balance": response,
+                "balance_raw": response,
+            })
+        except Exception as err:
+            _LOGGER.error("balance_probe entry=%s failed: %s", eid, err)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -62,6 +106,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "force_refresh",
             _handle_force_refresh,
             schema=FORCE_REFRESH_SCHEMA,
+        )
+    if not hass.services.has_service(DOMAIN, "balance_probe"):
+        hass.services.async_register(
+            DOMAIN,
+            "balance_probe",
+            _handle_balance_probe,
+            schema=BALANCE_PROBE_SCHEMA,
         )
 
     return True
