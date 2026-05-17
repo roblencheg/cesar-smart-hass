@@ -167,7 +167,9 @@ def _extract_currency_from_string(balance: Any) -> str | None:
         )
         for val in balance.values():
             if isinstance(val, dict):
-                text += " " + _extract_currency_from_string(val) or ""
+                nested = _extract_currency_from_string(val)
+                if nested:
+                    text += " " + nested
     elif isinstance(balance, str):
         text = balance
     upper = text.upper()
