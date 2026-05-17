@@ -50,6 +50,9 @@ async def test_coordinator_update(mock_hass, mock_entry):
         coordinator.api, "async_get_unit_statuses",
         AsyncMock(return_value={"ENGINE_STATE": "STOPPED"}),
     ), patch.object(
+        coordinator.api, "async_get_full_info",
+        AsyncMock(return_value=None),
+    ), patch.object(
         coordinator.api, "async_get_location",
         AsyncMock(return_value={"latitude": 55.0, "longitude": 37.0}),
     ), patch.object(
