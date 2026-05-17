@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DEBUG_ATTRIBUTES, DEFAULT_DEBUG_ATTRIBUTES, DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
+from .const import DOMAIN, MANUFACTURER, STATUS_SENSORS, device_id_from_vin_unit
 from .coordinator import CesarSmartCoordinator
 
 _LOGGER = logging.getLogger(__name__)

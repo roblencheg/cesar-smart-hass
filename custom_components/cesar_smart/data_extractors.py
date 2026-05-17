@@ -89,7 +89,8 @@ def merge_status_sources(statuses: dict, full_info: dict | None) -> dict:
         if val is not None and val != "":
             old = merged.get(key)
             if old != val:
-                if key in ("ENGINE_TEMP", "SALON_TEMP", "OUTDOOR_TEMP", "FUEL_VALUE", "MILEAGE_KM", "VEHICLE_CHARGE_VOLT"):
+                _DIFF_KEYS = ("ENGINE_TEMP", "SALON_TEMP", "OUTDOOR_TEMP", "FUEL_VALUE", "MILEAGE_KM", "VEHICLE_CHARGE_VOLT")
+                if key in _DIFF_KEYS:
                     _LOGGER.debug(
                         "Status merge %s: statuses=%s full_info=%s merged=%s",
                         key, old, val, val,
