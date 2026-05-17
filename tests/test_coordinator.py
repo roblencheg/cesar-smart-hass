@@ -90,10 +90,14 @@ async def test_coordinator_merge_full_info(mock_hass, mock_entry):
         coordinator.api, "async_get_location",
         AsyncMock(return_value={"latitude": 55.0}),
     ), patch.object(
+        coordinator.api, "async_get_balance",
+        AsyncMock(return_value=None),
+    ), patch.object(
         coordinator, "async_refresh_token_if_needed", AsyncMock()
     ):
         coordinator._access_token = "test_token"
         coordinator._enable_full_info = True
+        coordinator._enable_balance = False
         data = await coordinator._async_update_data()
         assert data["statuses"]["ENGINE_TEMP"] == 88
         assert data["statuses"]["FUEL_VALUE"] == 30
