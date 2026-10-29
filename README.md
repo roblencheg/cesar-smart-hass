@@ -160,3 +160,7 @@ MIT License
 5. Настройте опциональные параметры (WebSocket, интервалы опроса)
 
 > Конфигурация через YAML не требуется.
+
+## Статья
+
+[Cesar Smart в Home Assistant: статусы, GPS и баланс SIM-карты](https://volonterski.ru/articles/cesar-smart-home-assistant/) — подробное описание проекта и примеры использования.
